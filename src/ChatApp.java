@@ -7,6 +7,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
@@ -23,6 +24,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -395,6 +397,22 @@ public class ChatApp extends JFrame {
 		return image;
 	}
 
+	public static String encodeToString(File imageFile, String type) throws IOException {
+        String imageString = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+ 
+        BufferedImage image = ImageIO.read(imageFile);
+        ImageIO.write(image, type, bos);
+        byte[] imageBytes = bos.toByteArray();
+ 
+        BASE64Encoder encoder = new BASE64Encoder();
+        imageString = encoder.encode(imageBytes);
+ 
+        bos.close();
+        return imageString;
+    }
+
+	
 	public void connection() {
 		try {
 			groupList.add(adminRoom);
