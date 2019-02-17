@@ -14,6 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.ListModel;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
@@ -52,6 +53,10 @@ public class ChatApp extends JFrame {
 
 	List<Group> groupList = new ArrayList<>();
 	Group adminRoom = new Group("230.1.1.1", "AdminRoom");
+	
+	
+	List<User> userList = new ArrayList<>();
+	String onlineUser[] = {""};
 
 	/**
 	 * Launch the application.
@@ -100,7 +105,7 @@ public class ChatApp extends JFrame {
 		scrollPane.setBounds(10, 162, 178, 206);
 		contentPane.add(scrollPane);
 
-		onlineUsers = new JList();
+		onlineUsers = new JList(onlineUser);
 		scrollPane.setViewportView(onlineUsers);
 
 		JLabel lblOnlineUser = new JLabel("Online Users");
@@ -119,6 +124,40 @@ public class ChatApp extends JFrame {
 		contentPane.add(lblConversations);
 
 		registerUserBtn = new JButton("Register User");
+		registerUserBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(!(checkUserAvailable(userList,registerUser_txt.getText()) == -1)) {
+					try {
+						String msg = "User Existed Choose New Name";
+						byte[] buf = msg.getBytes();
+						DatagramPacket dgp = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+						multicastSocket.send(dgp);
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
+					return;
+				}
+				User newUser = new User(registerUser_txt.getText());
+				userList.add(newUser);
+				
+				try {
+					String msg = userID + " : is change to " + registerUser_txt.getText() ; 
+					byte[] buf = msg.getBytes();
+					DatagramPacket dgp = new DatagramPacket(buf,buf.length,multicastGroup,6789);
+					multicastSocket.send(dgp);
+				}
+				catch(IOException ex) {
+					ex.printStackTrace();
+				}
+
+				userID = registerUser_txt.getText();
+				onlineUser = addUser(onlineUser,userID);
+				onlineUsers = new JList(onlineUser);
+				scrollPane.setViewportView(onlineUsers);
+				
+			}
+		});
 		registerUserBtn.setBounds(23, 26, 138, 23);
 		contentPane.add(registerUserBtn);
 
@@ -188,7 +227,10 @@ public class ChatApp extends JFrame {
 									int length = dgpRecevied.getLength();
 
 									String msg = new String(receiveData, 0, length);
-									messageTextArea.append(msg + "\n");
+									
+									if(msg.substring(0,3).matches("^[a-zA-Z0-9_]*$")) {
+										messageTextArea.append(msg + "\n");
+									}
 								} catch (IOException ex) {
 									ex.printStackTrace();
 								}
@@ -233,6 +275,21 @@ public class ChatApp extends JFrame {
 		contentPane.add(closeGroupBtn);
 
 		sendMessageBtn = new JButton("Send Message");
+		sendMessageBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					String msg = sendMessage_txt.getText();
+					msg = userID + " : " + msg;
+					byte[] buf = msg.getBytes();
+					DatagramPacket dgpSend = new DatagramPacket(buf,buf.length,multicastGroup,6789);
+					multicastSocket.send(dgpSend);
+					System.out.println(multicastGroup);
+					
+				}catch(IOException ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
 		sendMessageBtn.setBounds(726, 379, 128, 23);
 		contentPane.add(sendMessageBtn);
 
@@ -276,6 +333,28 @@ public class ChatApp extends JFrame {
 	public List<Group> addAddress(List<Group> groupList, Group newAddress) {
 		groupList.add(newAddress);
 		return groupList;
+	}
+	
+	
+	public int checkUserAvailable(List<User> userList,String name) {
+		for (int x = 0; x < userList.size(); x++) {
+			if (userList.get(x).userName.equals(name)) {
+				return x;
+			}
+		}
+		return -1;
+	}
+	
+	public String[] addUser(String[] currentList,String newUser) {
+		int currentSize = currentList.length;
+	    int newSize = currentSize + 1;
+	    String[] tempArray = new String[ newSize ];
+	    for (int i=0; i < currentSize; i++)
+	    {
+	        tempArray[i] = currentList [i];
+	    }
+	    tempArray[newSize- 1] = newUser;
+	    return tempArray; 
 	}
 
 	public void connection() {
