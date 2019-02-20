@@ -441,26 +441,21 @@ public class ChatApp extends JFrame {
 							int length = dgpRecevied.getLength();
 
 							String msg = new String(receiveData, 0, length);
-							
-							
+
 							if (msg.substring(0, 3).matches("^[a-zA-Z0-9_]*$")) {
 								messageTextArea.append(msg + "\n");
 							}
-							
-							if (!(msg.substring(0, 3).matches("^[a-zA-Z0-9_]*$"))) {
-								ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(receiveData));
-								try {
-									groupList = (List<Group>) ois.readObject();
 
-								} catch (ClassNotFoundException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								} finally {
-									ois.close();
-								}
+							ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(receiveData));
+							try {
+								groupList = (List<Group>) ois.readObject();
+
+							} catch (ClassNotFoundException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							} finally {
+								ois.close();
 							}
-
-							
 
 						} catch (IOException ex) {
 							ex.printStackTrace();
