@@ -53,7 +53,8 @@ public class ChatApp extends JFrame {
 
 	private JPanel contentPane;
 
-	JList groups, onlineUsers;
+	JList<Group> groups;
+	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, editGroupNameBtn, sendMessageBtn, registerUserBtn;
 	JTextField createGroup_txt, editGroupName_txt, sendMessage_txt;
@@ -147,7 +148,10 @@ public class ChatApp extends JFrame {
 		createGroupBtn = new JButton("Create Group");
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
+				
+				groups = new JList(groupController.createGroup(createGroup_txt.getText()));
+				scrollPane_1.setViewportView(groups);
+				
 			}
 		});
 		createGroupBtn.setBounds(22, 60, 139, 23);

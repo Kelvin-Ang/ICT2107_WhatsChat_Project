@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.DefaultListModel;
 import javax.swing.JTextArea;
 
 import sun.misc.BASE64Decoder;
@@ -36,7 +37,7 @@ public class GroupController {
 	List<Group> groupList = new ArrayList<>();
 	Group adminRoom = new Group("230.1.1.1", "AdminRoom");
 	
-	
+	User CurrentUser = new User(userID); 
 	
 	
 	public String IPincrease(String MaxIP) {
@@ -132,7 +133,29 @@ public class GroupController {
 			
 			sendingData.setCommand("Send");
 			
-			String message = userID + " joined";
+			String message = CurrentUser.userName + " joined";
+			
+			stringData.add(message);
+			sendingData.setStringData(stringData);
+
+			byte[] buf = toByte(sendingData);
+
+			DatagramPacket dgpConnected = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+			multicastSocket.send(dgpConnected);
+			newThread();
+		} catch (IOException ex) {
+
+		}
+	}
+	
+	public void userJoinRoom() {
+		DataSend sendingData = new DataSend();
+		List<String> stringData = new ArrayList<>();
+		
+		try {
+			sendingData.setCommand("Send");
+			
+			String message = CurrentUser.userName + " joined";
 			
 			stringData.add(message);
 			sendingData.setStringData(stringData);
@@ -220,11 +243,12 @@ public class GroupController {
 			
 			
 			String msg = message;
-			msg = userID + " : " + msg;
+			msg = CurrentUser.userName + " : " + msg;
 			stringData.add(msg);
 			sendingData.setStringData(stringData);
 			sendingData.setCommand("Send");
 			byte[] buf = toByte(sendingData);
+			
 			
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
 			multicastSocket.send(dgpSend);
@@ -235,7 +259,69 @@ public class GroupController {
 		}
 	}
 	
+	public void sendGroupData(List<Group> groupList) {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setGroupData(groupList);
+			sendingData.setCommand("Create");
+			byte[] buf = toByte(sendingData);
+			
+			 multicastGroup = InetAddress.getByName(groupList.get(0).IPAddress);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+			multicastSocket.send(dgpSend);
+			System.out.println(multicastGroup);
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		
+		
+	}
 	
+	
+	public DefaultListModel<Group> createGroup(String groupName) {
+		DefaultListModel<Group> currentGroupList = new DefaultListModel();
+		
+		try {
+
+			if (!(getRoomCreated(groupList, groupName) == -1)) {
+				
+				sendMessage("Room Created");
+				for(Group groups : CurrentUser.groupList) {
+					currentGroupList.addElement(groups);
+				}
+				
+				return currentGroupList;
+			}
+
+			Group newGroup = new Group(IPincrease(groupList.get(groupList.size() - 1).IPAddress),groupName);
+			groupList.add(newGroup);
+			CurrentUser.groupList.add(newGroup);
+			
+			sendGroupData(groupList);
+
+			InetAddress AdminGroup = InetAddress.getByName(groupList.get(getRoomCreated(groupList,groupName)).IPAddress);
+			System.out.print(AdminGroup);
+			// multicastSocket = new MulticastSocket(6789);
+
+			multicastSocket.joinGroup(AdminGroup);
+
+			userJoinRoom();
+			newThread();
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+		
+		
+		
+		for(Group groups : CurrentUser.groupList) {
+			currentGroupList.addElement(groups);
+		}
+		
+		return currentGroupList;
+
+	}
 	
 
 }
