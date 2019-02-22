@@ -47,24 +47,22 @@ import java.awt.Font;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box; // import the HashMap class
+import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 
 public class ChatApp extends JFrame {
 
+	// Declare UI variables
 	private JPanel contentPane;
-
 	JList<Group> groups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
-	JButton createGroupBtn, editGroupNameBtn, sendMessageBtn, registerUserBtn;
-	JTextField createGroup_txt, editGroupName_txt, sendMessage_txt;
-
-	
-	
+	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
+	JTextField createGroup_txt, sendMessage_txt;
 	private JLabel imageLabel;
-	private JButton btnLogOut;
-
-	GroupController groupController = new GroupController(messageTextArea);
+	
+	// Declare value variables
+	GroupController groupController;
 	
 	/**
 	 * Launch the application.
@@ -90,7 +88,11 @@ public class ChatApp extends JFrame {
 	 */
 	public ChatApp() {
 		
+		groupController = new GroupController(messageTextArea);
 		
+		/**
+		 * Start of User Interface
+		 */
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
@@ -98,114 +100,103 @@ public class ChatApp extends JFrame {
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(10, 120, 180, 250);
+		contentPane.add(scrollPane);
+		onlineUsers = new JList<>();
+		scrollPane.setViewportView(onlineUsers);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(229, 162, 178, 206);
+		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-
-		groups = new JList();
+		groups = new JList<Group>(groupController.getCurrentUserGroupList());
 		scrollPane_1.setViewportView(groups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
-		scrollPane_2.setBounds(450, 162, 404, 206);
+		scrollPane_2.setBounds(430, 120, 420, 250);
 		contentPane.add(scrollPane_2);
-
-		
 		scrollPane_2.setViewportView(messageTextArea);
-
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(10, 162, 178, 206);
-		contentPane.add(scrollPane);
-
-		onlineUsers = new JList();
-		scrollPane.setViewportView(onlineUsers);
+		DefaultListModel<User> model = new DefaultListModel<>();
+		User u1 = new User("Darren", "230.1.1.1");
+		User u2 = new User("Ziyi", "230.1.1.1");
+		User u3 = new User("Kelvin", "230.1.1.1");
+		model.addElement(u1);
+		model.addElement(u2);
+		model.addElement(u3);
 
 		JLabel lblOnlineUser = new JLabel("Online Users");
 		lblOnlineUser.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblOnlineUser.setBounds(22, 137, 95, 14);
+		lblOnlineUser.setBounds(10, 90, 180, 25);
 		contentPane.add(lblOnlineUser);
 
 		JLabel lblGroups = new JLabel("Groups");
 		lblGroups.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblGroups.setBounds(229, 137, 95, 14);
+		lblGroups.setBounds(220, 90, 180, 25);
 		contentPane.add(lblGroups);
 
 		JLabel lblConversations = new JLabel("Conversation");
 		lblConversations.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblConversations.setBounds(450, 137, 95, 14);
+		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 			
 			}
 		});
-		registerUserBtn.setBounds(23, 26, 138, 23);
+		registerUserBtn.setBounds(10, 10, 150, 25);
 		contentPane.add(registerUserBtn);
 
 		createGroupBtn = new JButton("Create Group");
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
-				groups = new JList(groupController.createGroup(createGroup_txt.getText()));
-				scrollPane_1.setViewportView(groups);
-				
+				groupController.createGroup(createGroup_txt.getText());
+				groups.setModel(groupController.getCurrentUserGroupList());
 			}
 		});
-		createGroupBtn.setBounds(22, 60, 139, 23);
+		createGroupBtn.setBounds(10, 50, 150, 25);
 		contentPane.add(createGroupBtn);
 
 		createGroup_txt = new JTextField();
 		createGroup_txt.setColumns(10);
-		createGroup_txt.setBounds(171, 63, 170, 20);
+		createGroup_txt.setBounds(170, 50, 170, 25);
 		contentPane.add(createGroup_txt);
-
-		editGroupNameBtn = new JButton("Edit Group Name");
-		editGroupNameBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
-		editGroupNameBtn.setBounds(22, 94, 139, 23);
-		contentPane.add(editGroupNameBtn);
-
-		editGroupName_txt = new JTextField();
-		editGroupName_txt.setColumns(10);
-		editGroupName_txt.setBounds(171, 95, 170, 20);
-		contentPane.add(editGroupName_txt);
 
 		sendMessageBtn = new JButton("Send Message");
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				groupController.sendMessage(sendMessage_txt.getText());
+				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
 			}
 		});
-		sendMessageBtn.setBounds(726, 379, 128, 23);
+		sendMessageBtn.setBounds(722, 380, 128, 25);
 		contentPane.add(sendMessageBtn);
 
 		sendMessage_txt = new JTextField();
 		sendMessage_txt.setColumns(10);
-		sendMessage_txt.setBounds(10, 380, 706, 20);
+		sendMessage_txt.setBounds(10, 380, 706, 25);
 		contentPane.add(sendMessage_txt);
 		
 		JButton btnLogin = new JButton("Login");
-		btnLogin.setBounds(186, 26, 138, 23);
+		btnLogin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
+		btnLogin.setBounds(170, 10, 150, 25);
 		contentPane.add(btnLogin);
 		
 		JLabel lblUserName = new JLabel("User Name");
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(551, 26, 129, 18);
+		lblUserName.setBounds(582, 34, 129, 18);
 		contentPane.add(lblUserName);
 		
 		imageLabel = new JLabel("ImageLabel");
-		imageLabel.setBounds(551, 58, 84, 68);
+		imageLabel.setBounds(431, 10, 84, 68);
 		contentPane.add(imageLabel);
 		
-		btnLogOut = new JButton("Log out");
-		btnLogOut.setBounds(703, 26, 138, 23);
-		contentPane.add(btnLogOut);
-
-		groupController.connection(); 
+		/**
+		 * End of User Interface
+		 */
 	}
 }

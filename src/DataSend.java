@@ -1,18 +1,22 @@
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DataSend implements Serializable {
 	
 	public String command;
+	public InetAddress multicastGroupIP;
 	public List<String> stringData = new ArrayList<>();
 	public List<User> userData = new ArrayList<>();
 	public List<Group> groupData = new ArrayList<>();
-	
-	
-	
+
 	public void setCommand(String command) {
 		this.command = command;
+	}
+	
+	public void setMulticastGroupIP(InetAddress multicastGroupIP) {
+		this.multicastGroupIP = multicastGroupIP;
 	}
 	
 	public void setStringData(List<String> stringData) {
@@ -27,6 +31,5 @@ public class DataSend implements Serializable {
 	}
 	
 		
-	
-	
+
 }

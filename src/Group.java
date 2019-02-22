@@ -9,6 +9,11 @@ public class Group implements Serializable {
 	List<String> lastTenMessage = new ArrayList<>();
 	List<User> userList = new ArrayList<>(); 
 	
+	public Group(String IPAddress,String groupName) {
+		this.IPAddress = IPAddress;
+		this.groupName = groupName;
+	}
+	
 	public String getIPAddress() {
 		return IPAddress;
 	}
@@ -39,11 +44,6 @@ public class Group implements Serializable {
 
 	public void setUserList(List<User> userList) {
 		this.userList = userList;
-	}
-
-	public Group(String IPAddress,String groupName) {
-		this.IPAddress = IPAddress;
-		this.groupName = groupName;
 	}
 	
 	public String toString() {
