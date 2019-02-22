@@ -5,11 +5,15 @@ import java.util.List;
 
 public class User implements Serializable {
 
-	String userName;
-	String password;
-	String currentIP;
-	Image profilePic;
-	List<Group> groupList = new ArrayList<>();
+	String userName; // Name of user
+	String password; // Password of user
+	String currentIP; // Current active group
+	Image profilePic; // Display picture of user
+	List<Group> groupList = new ArrayList<>(); // Groups that the user is in
+	
+	public User(String userName) {
+		this.userName = userName;
+	}
 	
 	public User(String userName, String password, Image profilePic) {
 		this.userName = userName;
@@ -24,5 +28,10 @@ public class User implements Serializable {
 	}
 	public Image getProfilePic() {
 		return profilePic;
+	}
+	
+	@Override
+	public String toString() {
+		return this.userName;
 	}
 }

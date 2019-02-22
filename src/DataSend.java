@@ -27,6 +27,5 @@ public class DataSend implements Serializable {
 	}
 	
 		
-	
-	
+
 }
