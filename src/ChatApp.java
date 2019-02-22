@@ -54,7 +54,7 @@ public class ChatApp extends JFrame {
 
 	// Declare UI variables
 	private JPanel contentPane;
-	JList groups;
+	JList<Group> groups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
@@ -155,7 +155,10 @@ public class ChatApp extends JFrame {
 		createGroupBtn = new JButton("Create Group");
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-
+				
+				groups = new JList(groupController.createGroup(createGroup_txt.getText()));
+				scrollPane_1.setViewportView(groups);
+				
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);
