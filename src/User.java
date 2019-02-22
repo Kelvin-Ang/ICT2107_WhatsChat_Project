@@ -11,12 +11,9 @@ public class User implements Serializable {
 	Image profilePic; // Display picture of user
 	List<Group> groupList = new ArrayList<>(); // Groups that the user is in
 	
-	public User(String userName) {
+	public User(String userName, String currentIP) {
 		this.userName = userName;
-	}
-	
-	public User(String userID) {
-		this.userName = userID;
+		this.currentIP = currentIP;
 	}
 	
 	public String getUserName() {

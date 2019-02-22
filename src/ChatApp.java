@@ -62,8 +62,7 @@ public class ChatApp extends JFrame {
 	private JLabel imageLabel;
 	
 	// Declare value variables
-
-	GroupController groupController = new GroupController(messageTextArea);
+	GroupController groupController;
 	
 	/**
 	 * Launch the application.
@@ -89,7 +88,11 @@ public class ChatApp extends JFrame {
 	 */
 	public ChatApp() {
 		
+		groupController = new GroupController(messageTextArea);
 		
+		/**
+		 * Start of User Interface
+		 */
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
@@ -98,31 +101,26 @@ public class ChatApp extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-				JScrollPane scrollPane = new JScrollPane();
-				scrollPane.setBounds(10, 120, 180, 250);
-				contentPane.add(scrollPane);
-				
-						onlineUsers = new JList<>();
-						onlineUsers.setModel(model);
-						scrollPane.setViewportView(onlineUsers);
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(10, 120, 180, 250);
+		contentPane.add(scrollPane);
+		onlineUsers = new JList<>();
+		scrollPane.setViewportView(onlineUsers);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-
-		groups = new JList();
+		groups = new JList<Group>(groupController.getCurrentUserGroupList());
 		scrollPane_1.setViewportView(groups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setBounds(430, 120, 420, 250);
 		contentPane.add(scrollPane_2);
-
-		
 		scrollPane_2.setViewportView(messageTextArea);
 		DefaultListModel<User> model = new DefaultListModel<>();
-		User u1 = new User("Darren");
-		User u2 = new User("Ziyi");
-		User u3 = new User("Kelvin");
+		User u1 = new User("Darren", "230.1.1.1");
+		User u2 = new User("Ziyi", "230.1.1.1");
+		User u3 = new User("Kelvin", "230.1.1.1");
 		model.addElement(u1);
 		model.addElement(u2);
 		model.addElement(u3);
@@ -142,7 +140,6 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -155,10 +152,8 @@ public class ChatApp extends JFrame {
 		createGroupBtn = new JButton("Create Group");
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
-				groups = new JList(groupController.createGroup(createGroup_txt.getText()));
-				scrollPane_1.setViewportView(groups);
-				
+				groupController.createGroup(createGroup_txt.getText());
+				groups.setModel(groupController.getCurrentUserGroupList());
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);
@@ -172,7 +167,7 @@ public class ChatApp extends JFrame {
 		sendMessageBtn = new JButton("Send Message");
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				groupController.sendMessage(sendMessage_txt.getText());
+				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
 			}
 		});
 		sendMessageBtn.setBounds(722, 380, 128, 25);
@@ -199,7 +194,9 @@ public class ChatApp extends JFrame {
 		imageLabel = new JLabel("ImageLabel");
 		imageLabel.setBounds(431, 10, 84, 68);
 		contentPane.add(imageLabel);
-
-		groupController.connection(); 
+		
+		/**
+		 * End of User Interface
+		 */
 	}
 }
