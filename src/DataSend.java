@@ -1,13 +1,32 @@
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
-public class DataSend<T> {
+public class DataSend implements Serializable {
 	
 	public String command;
-	public List<T> data;
+	public List<String> stringData = new ArrayList<>();
+	public List<User> userData = new ArrayList<>();
+	public List<Group> groupData = new ArrayList<>();
 	
-	public DataSend(String command,List<T> data) {
+	
+	
+	public void setCommand(String command) {
 		this.command = command;
-		this.data = data;
 	}
-
+	
+	public void setStringData(List<String> stringData) {
+		this.stringData = stringData;
+		
+	}
+	public void setUserData(List<User> userData) {
+		this.userData = userData;
+	}
+	public void setGroupData(List<Group> groupData) {
+		this.groupData = groupData;
+	}
+	
+		
+	
+	
 }
