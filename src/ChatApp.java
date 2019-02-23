@@ -18,9 +18,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -71,10 +75,12 @@ public class ChatApp extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					messageTextArea = new JTextArea();
 					ChatApp frame = new ChatApp();
-					
 					frame.setVisible(true);
+					frame.setTitle("WhatsChat");
+					frame.setLocationRelativeTo(null);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -111,6 +117,21 @@ public class ChatApp extends JFrame {
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
 		groups = new JList<Group>(groupController.getCurrentUserGroupList());
+		groups.addMouseListener(new MouseAdapter() {
+			@SuppressWarnings("static-access")
+		    public void mouseClicked(MouseEvent evt) {
+		        JList list = (JList)evt.getSource();
+		        if (evt.getClickCount() == 2) {
+		            // Double-click detected
+		            int index = list.locationToIndex(evt.getPoint());
+			    	GroupInformation frame = new GroupInformation();
+			    	frame.getObj().setGroupController(groupController);
+			    	frame.getObj().setCurrentGroup(groupController.getCurrentUser().getGroupList().get(index));
+					frame.getObj().setVisible(true);
+					frame.getObj().setTitle(groupController.getCurrentUser().getGroupList().get(index) + " Information");
+		        }
+		    }
+		});
 		scrollPane_1.setViewportView(groups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
