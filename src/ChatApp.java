@@ -1,5 +1,6 @@
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -38,15 +39,18 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JScrollPane;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 
 import java.awt.Font;
+import java.awt.Image;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box; // import the HashMap class
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 
@@ -64,6 +68,15 @@ public class ChatApp extends JFrame {
 	// Declare value variables
 	GroupController groupController;
 	static ChatApp frame;
+	
+	UserList userList;
+	ArrayList<String> nameList;
+	ArrayList<Image> imageList;
+	
+	JList nameJList;
+	JList<Image> imageJList;
+	
+	private Map<String, Image> imageMap;
 	/**
 	 * Launch the application.
 	 */
@@ -100,11 +113,22 @@ public class ChatApp extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		
+		try {
+			DBController dbCon = new DBController();
+			userList = dbCon.getAll();
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 120, 180, 250);
 		contentPane.add(scrollPane);
-		onlineUsers = new JList<>();
-		scrollPane.setViewportView(onlineUsers);
+		nameJList = new JList(userList.getNameList().toArray());
+		imageMap = userList.getUserList();
+		nameJList.setCellRenderer(new listRenderer());
+		scrollPane.setViewportView(nameJList);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
@@ -196,8 +220,29 @@ public class ChatApp extends JFrame {
 		});
 		btnLogin.setBounds(170, 10, 150, 25);
 		contentPane.add(btnLogin);
+		
 		/**
 		 * End of User Interface
 		 */
 	}
+	public class listRenderer extends DefaultListCellRenderer {
+
+        Font font = new Font("helvitica", Font.BOLD, 20);
+
+        @Override
+        public Component getListCellRendererComponent(
+                JList list, Object value, int index,
+                boolean isSelected, boolean cellHasFocus) {
+        	
+            JLabel label = (JLabel) super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+          
+			Image myImg = imageMap.get((String) value).getScaledInstance(40, 40,Image.SCALE_SMOOTH);
+			ImageIcon image = new ImageIcon(myImg);
+            label.setIcon(image);
+            label.setHorizontalTextPosition(JLabel.RIGHT);
+            label.setFont(font);
+            return label;
+        }
+    }
 };
