@@ -1,4 +1,6 @@
+
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -17,13 +19,9 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,15 +39,18 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JScrollPane;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 
 import java.awt.Font;
+import java.awt.Image;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box; // import the HashMap class
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 
@@ -57,17 +58,27 @@ public class ChatApp extends JFrame {
 
 	// Declare UI variables
 	private JPanel contentPane;
-	JList<Group> onGoingGroups;
+	JList<Group> groups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
 	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel imageLabel, lblUserName;
+	private JLabel imageLabel;
 	
 	// Declare value variables
 	GroupController groupController;
 	static ChatApp frame;
 	
+	UserList userList;
+	ArrayList<String> nameList;
+	ArrayList<Image> imageList;
+	
+	JList nameJList;
+	JList<Image> imageJList;
+	
+	ArrayList<String> online = new ArrayList<String>();
+	
+	private Map<String, Image> imageMap;
 	/**
 	 * Launch the application.
 	 */
@@ -75,16 +86,13 @@ public class ChatApp extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					messageTextArea = new JTextArea();
 					frame = new ChatApp();
+					
 					frame.setVisible(true);
-					frame.setTitle("WhatsChat");
-					frame.setLocationRelativeTo(null);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
 			}
 		});
 	}
@@ -93,8 +101,6 @@ public class ChatApp extends JFrame {
 	 * Create the frame.
 	 */
 	public ChatApp() {
-		
-		// Implement controller into the client's application
 		groupController = new GroupController(messageTextArea);
 		
 		/**
@@ -107,32 +113,27 @@ public class ChatApp extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		try {
+			DBController dbCon = new DBController();
+			userList = dbCon.getOnlineUsers(online);
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 120, 180, 250);
 		contentPane.add(scrollPane);
-		onlineUsers = new JList<>();
-		scrollPane.setViewportView(onlineUsers);
+		nameJList = new JList(userList.getNameList().toArray());
+		imageMap = userList.getUserList();
+		nameJList.setCellRenderer(new listRenderer());
+		scrollPane.setViewportView(nameJList);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-		onGoingGroups = new JList<Group>(groupController.getCurrentUserGroupList());
-		onGoingGroups.addMouseListener(new MouseAdapter() {
-			@SuppressWarnings("static-access")
-		    public void mouseClicked(MouseEvent evt) {
-		        JList list = (JList)evt.getSource();
-		        if (evt.getClickCount() == 2) {
-		            // Double-click detected
-		            int index = list.locationToIndex(evt.getPoint());
-			    	GroupInformation groupInformation = new GroupInformation();
-			    	groupInformation.getObj().setGroupController(groupController);
-			    	groupInformation.getObj().setCurrentGroup(groupController.getCurrentUser().getGroupList().get(index));
-			    	groupInformation.getObj().setVisible(true);
-			    	groupInformation.getObj().setTitle(groupController.getCurrentUser().getGroupList().get(index).getGroupName() + " Information");
-		        }
-		    }
-		});
-		scrollPane_1.setViewportView(onGoingGroups);
+		groups = new JList<Group>(groupController.getCurrentUserGroupList());
+		scrollPane_1.setViewportView(groups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setBounds(430, 120, 420, 250);
@@ -161,15 +162,15 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-		lblUserName = new JLabel("User Name");
+		JLabel lblUserName = new JLabel("User Name");
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		lblUserName.setBounds(582, 34, 129, 18);
 		contentPane.add(lblUserName);
 		
-		imageLabel = new JLabel("ImageLabel");
+		imageLabel = new JLabel("");
 		imageLabel.setBounds(431, 10, 84, 68);
 		contentPane.add(imageLabel);
-
+		
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -184,7 +185,7 @@ public class ChatApp extends JFrame {
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
-				onGoingGroups.setModel(groupController.getCurrentUserGroupList());
+				groups.setModel(groupController.getCurrentUserGroupList());
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);
@@ -218,8 +219,29 @@ public class ChatApp extends JFrame {
 		});
 		btnLogin.setBounds(170, 10, 150, 25);
 		contentPane.add(btnLogin);
+		
 		/**
 		 * End of User Interface
 		 */
 	}
-}
+	public class listRenderer extends DefaultListCellRenderer {
+
+        Font font = new Font("helvitica", Font.BOLD, 20);
+
+        @Override
+        public Component getListCellRendererComponent(
+                JList list, Object value, int index,
+                boolean isSelected, boolean cellHasFocus) {
+        	
+            JLabel label = (JLabel) super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+          
+			Image myImg = imageMap.get((String) value).getScaledInstance(40, 40,Image.SCALE_SMOOTH);
+			ImageIcon image = new ImageIcon(myImg);
+            label.setIcon(image);
+            label.setHorizontalTextPosition(JLabel.RIGHT);
+            label.setFont(font);
+            return label;
+        }
+    }
+};
