@@ -66,7 +66,7 @@ public class ChatApp extends JFrame {
 	
 	// Declare value variables
 	GroupController groupController;
-	static ChatApp frame;
+	//static ChatApp frame;
 	
 	/**
 	 * Launch the application.
@@ -77,7 +77,7 @@ public class ChatApp extends JFrame {
 				try {
 					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					messageTextArea = new JTextArea();
-					frame = new ChatApp();
+					ChatApp frame = new ChatApp();
 					frame.setVisible(true);
 					frame.setTitle("WhatsChat");
 					frame.setLocationRelativeTo(null);
