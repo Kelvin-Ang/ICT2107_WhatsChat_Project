@@ -76,6 +76,9 @@ public class ChatApp extends JFrame {
 	JList nameJList;
 	JList<Image> imageJList;
 	
+	ArrayList<String> online = new ArrayList<String>();
+	
+	
 	private Map<String, Image> imageMap;
 	/**
 	 * Launch the application.
@@ -105,7 +108,6 @@ public class ChatApp extends JFrame {
 		/**
 		 * Start of User Interface
 		 */
-
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
 		contentPane = new JPanel();
@@ -113,10 +115,9 @@ public class ChatApp extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
-		
 		try {
 			DBController dbCon = new DBController();
-			userList = dbCon.getAll();
+			userList = dbCon.getOnlineUsers(online);
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
