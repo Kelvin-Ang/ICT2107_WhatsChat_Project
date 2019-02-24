@@ -129,6 +129,7 @@ public class GroupController {
 			byte[] buf = toByte(sendingData);
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
 			multicastSocket.send(dgpSend);
+			storeGroupMessages(currentUser.currentIP,message);
 			System.out.println(multicastGroup);
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -290,6 +291,28 @@ public class GroupController {
 			String newIPAdd = data[0] + "." + data[1] + "." + data[2] + "." + String.valueOf(newIP);
 			return newIPAdd;
 		}	
+	}
+	
+	/**
+	 * Function to store last ten message in group chat
+	 * @param multiCastGroup
+	 * @param message
+	 * @throws UnknownHostException 
+	 */
+	public void storeGroupMessages(String IpAddress,String message) throws UnknownHostException {
+		
+		InetAddress multiCastGroup = InetAddress.getByName(IpAddress);
+		//check for the Group in globalGroupList and update the group messages
+		for(Group group : globalGroupList) {
+			if(group.IPAddress.equals(multiCastGroup)) {
+				if(group.lastTenMessage.size()>10) {
+					group.lastTenMessage.remove(0);
+				}
+				group.lastTenMessage.add(message);
+				// Broadcast updates of groupList to all clients
+				//sendGroupData();
+			}
+		}
 	}
 
 	/**

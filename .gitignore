@@ -11,3 +11,4 @@ bin/GroupController.class
 bin/GroupInformation$1.class
 bin/GroupInformation.class
 bin/User.class
+bin/.gitignore
