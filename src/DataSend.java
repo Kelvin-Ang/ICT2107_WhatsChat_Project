@@ -7,6 +7,7 @@ public class DataSend implements Serializable {
 	
 	public String command;
 	public InetAddress multicastGroupIP;
+	public String sender;
 	public List<String> stringData = new ArrayList<>();
 	public List<User> userData = new ArrayList<>();
 	public List<Group> groupData = new ArrayList<>();
@@ -28,6 +29,9 @@ public class DataSend implements Serializable {
 	}
 	public void setGroupData(List<Group> groupData) {
 		this.groupData = groupData;
+	}
+	public void setSender(String sender) {
+		this.sender = sender;
 	}
 	
 		
