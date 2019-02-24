@@ -58,7 +58,7 @@ public class ChatApp extends JFrame {
 
 	// Declare UI variables
 	private JPanel contentPane;
-	JList<Group> groups;
+	JList<Group> onGoingGroups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
@@ -67,6 +67,7 @@ public class ChatApp extends JFrame {
 	
 	// Declare value variables
 	GroupController groupController;
+	static ChatApp frame;
 	
 	/**
 	 * Launch the application.
@@ -77,7 +78,7 @@ public class ChatApp extends JFrame {
 				try {
 					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					messageTextArea = new JTextArea();
-					ChatApp frame = new ChatApp();
+					frame = new ChatApp();
 					frame.setVisible(true);
 					frame.setTitle("WhatsChat");
 					frame.setLocationRelativeTo(null);
@@ -94,12 +95,12 @@ public class ChatApp extends JFrame {
 	 */
 	public ChatApp() {
 		
+		// Implement controller into the client's application
 		groupController = new GroupController(messageTextArea);
 		
 		/**
 		 * Start of User Interface
 		 */
-
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
 		contentPane = new JPanel();
@@ -116,23 +117,23 @@ public class ChatApp extends JFrame {
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-		groups = new JList<Group>(groupController.getCurrentUserGroupList());
-		groups.addMouseListener(new MouseAdapter() {
+		onGoingGroups = new JList<Group>(groupController.getCurrentUserGroupList());
+		onGoingGroups.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("static-access")
 		    public void mouseClicked(MouseEvent evt) {
 		        JList list = (JList)evt.getSource();
 		        if (evt.getClickCount() == 2) {
 		            // Double-click detected
 		            int index = list.locationToIndex(evt.getPoint());
-			    	GroupInformation frame = new GroupInformation();
-			    	frame.getObj().setGroupController(groupController);
-			    	frame.getObj().setCurrentGroup(groupController.getCurrentUser().getGroupList().get(index));
-					frame.getObj().setVisible(true);
-					frame.getObj().setTitle(groupController.getCurrentUser().getGroupList().get(index) + " Information");
+			    	GroupInformation groupInformation = new GroupInformation();
+			    	groupInformation.getObj().setGroupController(groupController);
+			    	groupInformation.getObj().setCurrentGroup(groupController.getCurrentUser().getGroupList().get(index));
+			    	groupInformation.getObj().setVisible(true);
+			    	groupInformation.getObj().setTitle(groupController.getCurrentUser().getGroupList().get(index).getGroupName() + " Information");
 		        }
 		    }
 		});
-		scrollPane_1.setViewportView(groups);
+		scrollPane_1.setViewportView(onGoingGroups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setBounds(430, 120, 420, 250);
@@ -174,7 +175,7 @@ public class ChatApp extends JFrame {
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
-				groups.setModel(groupController.getCurrentUserGroupList());
+				onGoingGroups.setModel(groupController.getCurrentUserGroupList());
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);

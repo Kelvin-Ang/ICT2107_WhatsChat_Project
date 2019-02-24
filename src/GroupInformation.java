@@ -128,6 +128,10 @@ public class GroupInformation extends JFrame {
 		contentPane.add(btnNewButton_1);
 	}
 	
+	/**
+	 * Function to populate the group's data into Group Information
+	 * @param currentGroup
+	 */
 	public void setCurrentGroup(Group currentGroup) {
 		txtGroupName.setText(currentGroup.getGroupName());
 		/**
