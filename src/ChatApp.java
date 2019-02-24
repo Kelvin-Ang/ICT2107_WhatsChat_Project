@@ -1,4 +1,3 @@
-
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
@@ -63,7 +62,7 @@ public class ChatApp extends JFrame {
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
 	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel imageLabel;
+	private JLabel imageLabel, lblUserName;
 	
 	// Declare value variables
 	GroupController groupController;
@@ -162,10 +161,20 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
+		lblUserName = new JLabel("User Name");
+		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblUserName.setBounds(582, 34, 129, 18);
+		contentPane.add(lblUserName);
+		
+		imageLabel = new JLabel("ImageLabel");
+		imageLabel.setBounds(431, 10, 84, 68);
+		contentPane.add(imageLabel);
+
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-			
+				Register register = new Register(lblUserName, imageLabel);
+				register.setVisible(true);
 			}
 		});
 		registerUserBtn.setBounds(10, 10, 150, 25);
@@ -203,20 +212,12 @@ public class ChatApp extends JFrame {
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				Login login = new Login(lblUserName, imageLabel);
+				login.setVisible(true);
 			}
 		});
 		btnLogin.setBounds(170, 10, 150, 25);
 		contentPane.add(btnLogin);
-		
-		JLabel lblUserName = new JLabel("User Name");
-		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(582, 34, 129, 18);
-		contentPane.add(lblUserName);
-		
-		imageLabel = new JLabel("ImageLabel");
-		imageLabel.setBounds(431, 10, 84, 68);
-		contentPane.add(imageLabel);
-		
 		/**
 		 * End of User Interface
 		 */
