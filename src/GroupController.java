@@ -101,32 +101,29 @@ public class GroupController {
 //								System.out.println("New2 ## "+objectDataReceived.groupData.toString());
 //								// Merge the rest of new received groups into own globalGroupList
 //								globalGroupList.addAll(objectDataReceived.groupData);
-								List<Group> temGroupList = new ArrayList<>();
+								List<Group> tempGroupList = new ArrayList<>();
 								System.out.println("New1 ## "+globalGroupList.toString());
-								for(Group recievedgroup : objectDataReceived.groupData) {
-									for(Group currentgroup : globalGroupList) {
-										if(recievedgroup.groupName.equals(currentgroup.groupName)) {
-											System.out.println("New adding "+temGroupList.toString());
+								// Compare globalGroupList with receivedGroupList to update to the latest
+								for(Group receivedGroup : objectDataReceived.groupData) {
+									for(Group currentGroup : globalGroupList) {
+										if(receivedGroup.groupName.equals(currentGroup.groupName)) {
+											System.out.println("New adding "+tempGroupList.toString());
 											break;
 										}
 									}
-									temGroupList.add(recievedgroup);
-									System.out.println("New adding after not same "+temGroupList.toString());
+									tempGroupList.add(receivedGroup);
+									System.out.println("New adding after not same "+tempGroupList.toString());
 									
 								}
 								
-								globalGroupList = new ArrayList<Group>(temGroupList);;
-								System.out.println("New2 ## "+temGroupList.toString());
-								
-								
-								
+								globalGroupList = new ArrayList<Group>(tempGroupList);;
+								System.out.println("New2 ## "+tempGroupList.toString());		
 								break;
 							case "RequestGroups":
 								// All clients to send out their global group list
 								if(!currentUser.userName.equals(objectDataReceived.sender)) {
 									sendGroupData(globalGroupList);
-								}
-								
+								}	
 								break;
 							default:
 								break;
@@ -144,8 +141,8 @@ public class GroupController {
 	 * @param message
 	 */
 	public void sendMessage(String source, String message) {
-		System.out.println("send message Called");
-		System.out.println(globalGroupList.toString());
+		System.out.println("================ Send message function called ================");
+		System.out.println("Displaying current globalList" + globalGroupList.toString());
 		try {
 			// Initialise SendData class
 			DataSend sendingData = new DataSend();
@@ -161,7 +158,10 @@ public class GroupController {
 			byte[] buf = toByte(sendingData);
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
 			multicastSocket.send(dgpSend);
-			storeGroupMessages(currentUser.currentIP,message);
+			if (!source.equals("System Error")) {
+				// Storing every message to keep track of last ten messages
+				storeGroupMessages(currentUser.currentIP, message);
+			}
 			System.out.println(multicastGroup);
 		} catch (IOException ex) {
 			ex.printStackTrace();
@@ -297,7 +297,7 @@ public class GroupController {
 	public void createGroup(String groupName) {
 		// Room already exist return user's current list without room creation
 		if (!(getRoomCreated(globalGroupList, groupName) == -1)) {
-			sendMessage("System Error", "Room name already taken");
+			sendMessage("System Error", "Group name \"" + groupName + "\" is already taken");
 		} else {
 			// Room does not exist, return user's list with room created
 			Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),groupName);
@@ -352,12 +352,13 @@ public class GroupController {
 	 * @param message
 	 * @throws UnknownHostException 
 	 */
-	public void storeGroupMessages(String IpAddress,String message) {
+	public void storeGroupMessages(String groupIpAddress,String message) {
 		
 		//check for the Group in globalGroupList and update the group messages
 		for(Group group : globalGroupList) {
-			if(group.IPAddress.equals(IpAddress)) {
-				System.out.println(IpAddress+" located");
+			if(group.IPAddress.equals(groupIpAddress)) {
+				System.out.println(groupIpAddress+" located");
+				// Ensure that only 10 messages are stored
 				if(group.lastTenMessage.size()>9) {
 					group.lastTenMessage.remove(0);
 				}
