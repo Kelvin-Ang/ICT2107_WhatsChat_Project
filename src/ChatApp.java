@@ -161,13 +161,13 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-		lblUserName = new JLabel("User Name");
+		lblUserName = new JLabel("Not Logged In");
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(582, 34, 129, 18);
+		lblUserName.setBounds(750, 10, 100, 25);
 		contentPane.add(lblUserName);
 		
-		imageLabel = new JLabel("ImageLabel");
-		imageLabel.setBounds(431, 10, 84, 68);
+		imageLabel = new JLabel("");
+		imageLabel.setBounds(750, 35, 100, 80);
 		contentPane.add(imageLabel);
 
 		registerUserBtn = new JButton("Register");
@@ -175,6 +175,8 @@ public class ChatApp extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				Register register = new Register(lblUserName, imageLabel);
 				register.setVisible(true);
+				register.setTitle("Register");
+				register.setLocationRelativeTo(null);
 			}
 		});
 		registerUserBtn.setBounds(10, 10, 150, 25);
@@ -214,6 +216,8 @@ public class ChatApp extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				Login login = new Login(lblUserName, imageLabel);
 				login.setVisible(true);
+				login.setTitle("Login");
+				login.setLocationRelativeTo(null);
 			}
 		});
 		btnLogin.setBounds(170, 10, 150, 25);

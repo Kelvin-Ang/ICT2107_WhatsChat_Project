@@ -31,7 +31,7 @@ public class Register extends JFrame {
 	private JLabel lblProfilePicture;
 	private JTextField txtName;
 	private JLabel lblUserRegistration;
-	static Register frame;
+	static Register registerFrame;
 	
 	String image = null;
 	private JLabel lblResult;
@@ -39,8 +39,9 @@ public class Register extends JFrame {
 	private JPasswordField txtCPassword;
 	
 	public Register(JLabel usernameText, JLabel imageLabel){
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 450, 300);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
+		setBounds(100, 100, 450, 493);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -112,10 +113,6 @@ public class Register extends JFrame {
 		JLabel lblNewLabel_2 = new JLabel("Confirm Password: ");
 		lblNewLabel_2.setBounds(50, 151, 120, 14);
 		contentPane.add(lblNewLabel_2);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setLocationRelativeTo(null);
-		setSize(362, 400);
-		setVisible(true);
 		
 		lblResult = new JLabel("");
 		lblResult.setBounds(75, 305, 205, 14);
@@ -193,9 +190,9 @@ public class Register extends JFrame {
 		panel2 = new JPanel();
 		nextButton = new JButton("NEXT");
 		panel2.add(nextButton);
-		frame.remove(contentPane);
-		frame.setContentPane(panel2);
-		frame.validate();
-        frame.repaint();
+		registerFrame.remove(contentPane);
+		registerFrame.setContentPane(panel2);
+		registerFrame.validate();
+		registerFrame.repaint();
 	}
 }

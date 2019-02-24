@@ -71,7 +71,7 @@ public class GroupController {
 						// Convert Datagram Packet to DataSend object
 						try {
 							objectDataReceived = (DataSend) ois.readObject();
-						} catch (ClassNotFoundException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {
 							ois.close();
@@ -129,7 +129,7 @@ public class GroupController {
 			byte[] buf = toByte(sendingData);
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
 			multicastSocket.send(dgpSend);
-			System.out.println(multicastGroup);
+			System.out.println("Send Message Function says: " + multicastGroup);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
