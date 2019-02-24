@@ -4,13 +4,18 @@ import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.imageio.ImageIO;
+import javax.print.DocFlavor.URL;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -32,26 +37,8 @@ public class Register extends JFrame {
 	private JLabel lblResult;
 	private JPasswordField txtPassword;
 	private JPasswordField txtCPassword;
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args){
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					frame = new Register();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
-	 * Create the frame.
-	 */
-	public Register(){
+	
+	public Register(JLabel usernameText, JLabel imageLabel){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 450, 300);
 		contentPane = new JPanel();
@@ -62,13 +49,22 @@ public class Register extends JFrame {
 		btnBrowsePcForImg.setBounds(88, 272, 167, 20);
 		label = new JLabel();
 		label.setBounds(176, 178, 69, 69);
+		
+		String defaultpath = "src/Images/user.jpg";
+		ImageIcon defaultimage = new ImageIcon(defaultpath);
+		Image img = defaultimage.getImage();
+		Image newImage = img.getScaledInstance(label.getWidth(), label.getHeight(), Image.SCALE_SMOOTH);
+		ImageIcon finalImage = new ImageIcon(newImage);
+		label.setIcon(finalImage);
+		image = defaultpath;
+		
 		contentPane.setLayout(null);
 		//label.setBounds(10, 10, 670, 250);
+		
 		getContentPane().add(btnBrowsePcForImg);
 		getContentPane().add(label);
-
+		
 		btnBrowsePcForImg.addActionListener(new ActionListener() {
-
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser file = new JFileChooser();
 				file.setCurrentDirectory(new File(System.getProperty("user.home")));
@@ -80,11 +76,10 @@ public class Register extends JFrame {
 				if (result == JFileChooser.APPROVE_OPTION) {
 					File selectedFile = file.getSelectedFile();
 					String path = selectedFile.getAbsolutePath();
-					label.setIcon(ResizeImage(path));
+					ImageIcon finalImage = ResizeImage(path);
+					label.setIcon(finalImage);
 					image = path;
 				}
-				// if the user click on save in Jfilechooser
-
 				else if (result == JFileChooser.CANCEL_OPTION) {
 					System.out.println("No File Select");
 				}
@@ -115,7 +110,7 @@ public class Register extends JFrame {
 		contentPane.add(lblUserRegistration);
 		
 		JLabel lblNewLabel_2 = new JLabel("Confirm Password: ");
-		lblNewLabel_2.setBounds(54, 151, 110, 14);
+		lblNewLabel_2.setBounds(50, 151, 120, 14);
 		contentPane.add(lblNewLabel_2);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
@@ -166,8 +161,13 @@ public class Register extends JFrame {
 					}
 					try {
 						Boolean insertSuccessful = dbCon.insertUser(username, password, image);
-						if (insertSuccessful)
+						if (insertSuccessful) {
 							lblResult.setText("Account created.");
+							imageLabel.setIcon(finalImage);
+							usernameText.setText(username);
+							setVisible(false);
+							dispose();
+						}
 						else 
 							lblResult.setText("Username existed");
 					} catch (Exception e1) {
@@ -193,9 +193,9 @@ public class Register extends JFrame {
 		panel2 = new JPanel();
 		nextButton = new JButton("NEXT");
 		panel2.add(nextButton);
-		 frame.remove(contentPane);
-		 frame.setContentPane(panel2);
-		 frame.validate();
-         frame.repaint();
+		frame.remove(contentPane);
+		frame.setContentPane(panel2);
+		frame.validate();
+        frame.repaint();
 	}
 }

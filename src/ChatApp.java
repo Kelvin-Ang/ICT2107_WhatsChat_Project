@@ -63,7 +63,7 @@ public class ChatApp extends JFrame {
 	
 	// Declare value variables
 	GroupController groupController;
-	
+	static ChatApp frame;
 	/**
 	 * Launch the application.
 	 */
@@ -72,13 +72,12 @@ public class ChatApp extends JFrame {
 			public void run() {
 				try {
 					messageTextArea = new JTextArea();
-					ChatApp frame = new ChatApp();
+					frame = new ChatApp();
 					
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
 			}
 		});
 	}
@@ -140,10 +139,20 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
+		JLabel lblUserName = new JLabel("User Name");
+		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblUserName.setBounds(582, 34, 129, 18);
+		contentPane.add(lblUserName);
+		
+		imageLabel = new JLabel("");
+		imageLabel.setBounds(431, 10, 84, 68);
+		contentPane.add(imageLabel);
+		
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-			
+				Register register = new Register(lblUserName, imageLabel);
+				register.setVisible(true);
 			}
 		});
 		registerUserBtn.setBounds(10, 10, 150, 25);
@@ -181,22 +190,14 @@ public class ChatApp extends JFrame {
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				Login login = new Login(lblUserName, imageLabel);
+				login.setVisible(true);
 			}
 		});
 		btnLogin.setBounds(170, 10, 150, 25);
 		contentPane.add(btnLogin);
-		
-		JLabel lblUserName = new JLabel("User Name");
-		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(582, 34, 129, 18);
-		contentPane.add(lblUserName);
-		
-		imageLabel = new JLabel("ImageLabel");
-		imageLabel.setBounds(431, 10, 84, 68);
-		contentPane.add(imageLabel);
-		
 		/**
 		 * End of User Interface
 		 */
 	}
-}
+};

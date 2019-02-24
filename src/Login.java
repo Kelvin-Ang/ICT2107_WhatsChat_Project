@@ -23,27 +23,10 @@ public class Login extends JFrame {
 	
 	User user;
 	private JPasswordField txtPassword;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					Login frame = new Login();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
 	/**
 	 * Create the frame.
 	 */
-	public Login() {
+	public Login(JLabel usernameText, JLabel imageLabel) {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 312, 300);
 		contentPane = new JPanel();
@@ -72,6 +55,10 @@ public class Login extends JFrame {
 		txtPassword.setBounds(136, 82, 86, 20);
 		contentPane.add(txtPassword);
 		
+		JLabel lblResult = new JLabel("");
+		lblResult.setBounds(68, 122, 176, 14);
+		contentPane.add(lblResult);
+		
 		JButton btnNewButton = new JButton("Login");
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -84,20 +71,31 @@ public class Login extends JFrame {
 				}
 				
 				DBController dbCon = new DBController();
-				try {
-					user = dbCon.getUser(username, password);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if(txtUsername.getText().equals("")) {
+					lblResult.setText("Please enter a username.");
 				}
-				if (user != null) {
-					Image myImg = user.getProfilePic().getScaledInstance(labelImage.getWidth(), labelImage.getHeight(), Image.SCALE_SMOOTH);
-					ImageIcon image = new ImageIcon(myImg);
-					labelImage.setIcon(image);
-					System.out.println("User found");
+				else if(txtPassword.getText().equals("")) {
+					lblResult.setText("Please enter a password.");
 				}
-				else{
-					System.out.println("User not found");
+				else {
+					try {
+						user = dbCon.getUser(username, password);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					if (user != null) {
+						Image myImg = user.getProfilePic().getScaledInstance(labelImage.getWidth(), labelImage.getHeight(), Image.SCALE_SMOOTH);
+						ImageIcon image = new ImageIcon(myImg);
+						imageLabel.setIcon(image);
+						System.out.println("User found");
+						usernameText.setText(username);
+						setVisible(false);
+						dispose();
+					}
+					else{
+						lblResult.setText("User is not found.");
+					}
 				}
 			}
 		});
