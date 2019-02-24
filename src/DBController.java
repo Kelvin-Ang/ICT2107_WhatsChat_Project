@@ -8,6 +8,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.ImageIcon;
 
@@ -85,5 +88,30 @@ public class DBController {
 			return user;
 		}
 		return null;
+	}
+	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
+		Connection conn = getConnection();
+		UserList userPair;
+		ArrayList<String> nameList = new ArrayList<String>();
+		Map<String, Image> userList = new HashMap<>();
+		
+		for (int i = 0; i < user.size(); i++) {
+			PreparedStatement insertUser = conn
+					.prepareStatement("SELECT * from User WHERE username = '" + user.get(i) + "'");
+			ResultSet result = insertUser.executeQuery();
+			
+			if (result.next()) {
+				byte[] imageByte = result.getBytes("profilePic");
+				byte[] usernameByte = result.getBytes("username");
+				String name = new String(usernameByte);
+				ImageIcon image = new ImageIcon(imageByte);
+				Image im = image.getImage();
+				userList.put(name, im);
+				nameList.add(name);
+			}
+		}
+	
+		userPair = new UserList(nameList, userList);
+		return userPair;
 	}
 }

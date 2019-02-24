@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -41,15 +42,18 @@ import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JScrollPane;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 
 import java.awt.Font;
+import java.awt.Image;
 
 import javax.imageio.ImageIO;
 import javax.swing.Box; // import the HashMap class
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 
@@ -66,7 +70,17 @@ public class ChatApp extends JFrame {
 	
 	// Declare value variables
 	GroupController groupController;
-	//static ChatApp frame;
+
+	// Users variables
+	UserList userList;
+	ArrayList<String> nameList;
+	ArrayList<Image> imageList;
+	
+	JList nameJList;
+	JList<Image> imageJList;
+	
+	ArrayList<String> online = new ArrayList<String>();
+	private Map<String, Image> imageMap;
 	
 	/**
 	 * Launch the application.
@@ -107,11 +121,21 @@ public class ChatApp extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		// Fetch users information and picture
+		try {
+			DBController dbCon = new DBController();
+			userList = dbCon.getOnlineUsers(online);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 120, 180, 250);
 		contentPane.add(scrollPane);
-		onlineUsers = new JList<>();
-		scrollPane.setViewportView(onlineUsers);
+		nameJList = new JList(userList.getNameList().toArray());
+		imageMap = userList.getUserList();
+		nameJList.setCellRenderer(new listRenderer());
+		scrollPane.setViewportView(nameJList);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
@@ -138,13 +162,6 @@ public class ChatApp extends JFrame {
 		scrollPane_2.setBounds(430, 120, 420, 250);
 		contentPane.add(scrollPane_2);
 		scrollPane_2.setViewportView(messageTextArea);
-		DefaultListModel<User> model = new DefaultListModel<>();
-		User u1 = new User("Darren", "230.1.1.1");
-		User u2 = new User("Ziyi", "230.1.1.1");
-		User u3 = new User("Kelvin", "230.1.1.1");
-		model.addElement(u1);
-		model.addElement(u2);
-		model.addElement(u3);
 
 		JLabel lblOnlineUser = new JLabel("Online Users");
 		lblOnlineUser.setFont(new Font("Tahoma", Font.PLAIN, 15));
@@ -226,4 +243,25 @@ public class ChatApp extends JFrame {
 		 * End of User Interface
 		 */
 	}
+
+		public class listRenderer extends DefaultListCellRenderer {
+
+        Font font = new Font("helvitica", Font.BOLD, 20);
+
+        @Override
+        public Component getListCellRendererComponent(
+                JList list, Object value, int index,
+                boolean isSelected, boolean cellHasFocus) {
+        	
+            JLabel label = (JLabel) super.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+          
+			Image myImg = imageMap.get((String) value).getScaledInstance(40, 40,Image.SCALE_SMOOTH);
+			ImageIcon image = new ImageIcon(myImg);
+            label.setIcon(image);
+            label.setHorizontalTextPosition(JLabel.RIGHT);
+            label.setFont(font);
+            return label;
+        }
+    }
 }
