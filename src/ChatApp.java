@@ -1,4 +1,3 @@
-
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
@@ -18,9 +17,13 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,16 +57,17 @@ public class ChatApp extends JFrame {
 
 	// Declare UI variables
 	private JPanel contentPane;
-	JList<Group> groups;
+	JList<Group> onGoingGroups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
 	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel imageLabel;
+	private JLabel imageLabel, lblUserName;
 	
 	// Declare value variables
 	GroupController groupController;
 	static ChatApp frame;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -71,13 +75,16 @@ public class ChatApp extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					messageTextArea = new JTextArea();
 					frame = new ChatApp();
-					
 					frame.setVisible(true);
+					frame.setTitle("WhatsChat");
+					frame.setLocationRelativeTo(null);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+
 			}
 		});
 	}
@@ -87,12 +94,12 @@ public class ChatApp extends JFrame {
 	 */
 	public ChatApp() {
 		
+		// Implement controller into the client's application
 		groupController = new GroupController(messageTextArea);
 		
 		/**
 		 * Start of User Interface
 		 */
-
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
 		contentPane = new JPanel();
@@ -109,8 +116,23 @@ public class ChatApp extends JFrame {
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-		groups = new JList<Group>(groupController.getCurrentUserGroupList());
-		scrollPane_1.setViewportView(groups);
+		onGoingGroups = new JList<Group>(groupController.getCurrentUserGroupList());
+		onGoingGroups.addMouseListener(new MouseAdapter() {
+			@SuppressWarnings("static-access")
+		    public void mouseClicked(MouseEvent evt) {
+		        JList list = (JList)evt.getSource();
+		        if (evt.getClickCount() == 2) {
+		            // Double-click detected
+		            int index = list.locationToIndex(evt.getPoint());
+			    	GroupInformation groupInformation = new GroupInformation();
+			    	groupInformation.getObj().setGroupController(groupController);
+			    	groupInformation.getObj().setCurrentGroup(groupController.getCurrentUser().getGroupList().get(index));
+			    	groupInformation.getObj().setVisible(true);
+			    	groupInformation.getObj().setTitle(groupController.getCurrentUser().getGroupList().get(index).getGroupName() + " Information");
+		        }
+		    }
+		});
+		scrollPane_1.setViewportView(onGoingGroups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setBounds(430, 120, 420, 250);
@@ -139,15 +161,15 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-		JLabel lblUserName = new JLabel("User Name");
+		lblUserName = new JLabel("User Name");
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		lblUserName.setBounds(582, 34, 129, 18);
 		contentPane.add(lblUserName);
 		
-		imageLabel = new JLabel("");
+		imageLabel = new JLabel("ImageLabel");
 		imageLabel.setBounds(431, 10, 84, 68);
 		contentPane.add(imageLabel);
-		
+
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -162,7 +184,7 @@ public class ChatApp extends JFrame {
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
-				groups.setModel(groupController.getCurrentUserGroupList());
+				onGoingGroups.setModel(groupController.getCurrentUserGroupList());
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);
@@ -200,4 +222,4 @@ public class ChatApp extends JFrame {
 		 * End of User Interface
 		 */
 	}
-};
+}

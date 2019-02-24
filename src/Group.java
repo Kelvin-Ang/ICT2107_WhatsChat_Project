@@ -4,10 +4,10 @@ import java.util.List;
 
 public class Group implements Serializable {
 
-	String IPAddress;
-	String groupName;
-	List<String> lastTenMessage = new ArrayList<>();
-	List<User> userList = new ArrayList<>(); 
+	String IPAddress; // Group's IP Address
+	String groupName; // Group's Name
+	List<String> lastTenMessage = new ArrayList<>(); // Group's last ten messages
+	List<User> userList = new ArrayList<>(); // List of Users inside group
 	
 	public Group(String IPAddress,String groupName) {
 		this.IPAddress = IPAddress;
@@ -44,6 +44,10 @@ public class Group implements Serializable {
 
 	public void setUserList(List<User> userList) {
 		this.userList = userList;
+	}
+	
+	public void addUser(User user) {
+		this.userList.add(user);
 	}
 	
 	public String toString() {

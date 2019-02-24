@@ -53,9 +53,7 @@ public class User implements Serializable {
 		this.password = password;
 		this.profilePic = profilePic;
 	}
-	public String getName() {
-		return userName;
-	}
+
 	public String getPassword() {
 		return password;
 	}

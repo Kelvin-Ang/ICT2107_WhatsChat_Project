@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,10 +29,8 @@ public class GroupController {
 	private InetAddress multicastLobby = null;
 	private MulticastSocket multicastSocket = null;
 	private User currentUser;
-	private Group adminRoom;
 	private List<User> globalUserList = new ArrayList<>();
 	private List<Group> globalGroupList = new ArrayList<>();
-	private final String userID = "anonymous";
 
 	/**
 	 * Constructor for Non-Login
@@ -39,16 +38,7 @@ public class GroupController {
 	 */
 	public GroupController(JTextArea messageTextArea) {
 		this.messageTextArea = messageTextArea;
-		adminRoom = new Group("230.1.1.1", "Lobby");
-		globalGroupList.add(adminRoom); // First element in List is always 230.1.1.1
-		currentUser = new User(userID, "230.1.1.1");
-		try {
-			multicastLobby = InetAddress.getByName("230.1.1.1");
-			multicastSocket = new MulticastSocket(6789);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		joinGroup(globalGroupList.get(0)); // Controller to join adminRoom
+		joinLobby();
 	}
 	
 	/* TO-DO Login function to restore state by changing Controller's attributes */
@@ -99,8 +89,15 @@ public class GroupController {
 									}
 								}
 								break;
-							case "BroadcastGroup":
-								globalGroupList = objectDataReceived.groupData;
+							case "BroadcastGroups":
+								// Remove all duplicated in received group from own globalGroupList
+								objectDataReceived.groupData.removeAll(globalGroupList);
+								// Merge the rest of new received groups into own globalGroupList
+								globalGroupList.addAll(objectDataReceived.groupData);
+								break;
+							case "RequestGroups":
+								// All clients to send out their global group list
+								sendGroupData(globalGroupList);
 								break;
 							default:
 								break;
@@ -146,9 +143,9 @@ public class GroupController {
 		try {
 			DataSend sendingData = new DataSend();
 			sendingData.setGroupData(groupList);
-			sendingData.setCommand("BroadcastGroup");
-			byte[] buf = toByte(sendingData);	
+			sendingData.setCommand("BroadcastGroups");
 			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);	
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
 			multicastSocket.send(dgpSend);
 		} catch (IOException ex) {
@@ -157,29 +154,90 @@ public class GroupController {
 	}
 	
 	/**
-	 * Initialize connection for constant broadcasting and send message for joining adminRoom
+	 * Function to request for current group list from all clients
+	 * @param groupList
 	 */
-	public void joinGroup(Group groupToJoin) {
+	public void getGroupData() {
 		try {
-			// Join group by IP Address and port
-			multicastGroup = InetAddress.getByName(groupToJoin.IPAddress);
-			multicastSocket.joinGroup(multicastGroup);
-			// Adding the joined group into Global Group List held by all clients
-			globalGroupList.add(groupToJoin);
-			// Store the joined group into the current user's Group List
-			currentUser.groupList.add(groupToJoin);
-			// Set joined group as User's active group
-			currentUser.setCurrentIP(groupToJoin.IPAddress);
-			// Send Datagram Packet for joining
-			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
-			newThread();
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand("RequestGroups");
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);	
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
 	}
 	
 	/**
-	 * Function to create group
+	 * Function for every client to join Lobby
+	 */
+	public void joinLobby() {
+		try {
+			Group adminRoom = new Group("230.1.1.1", "Lobby");
+			// Join Lobby
+			multicastLobby = InetAddress.getByName(adminRoom.getIPAddress());
+			multicastGroup = InetAddress.getByName(adminRoom.getIPAddress());
+			multicastSocket = new MulticastSocket(6789);
+			multicastSocket.joinGroup(multicastLobby);
+			newThread();
+			// Request group data from other clients
+			getGroupData();
+			// globalGroupList was never used before
+			if (globalGroupList == null || globalGroupList.isEmpty()) {
+				// Set lobby as User's active group
+				currentUser = new User("Anonymous", "230.1.1.1");
+				// Add User into the group
+				adminRoom.addUser(currentUser);
+				// Adding the joined group into Global Group List held by all clients
+				globalGroupList.add(adminRoom);
+				// Store the joined group into the current user's Group List
+				currentUser.groupList.add(adminRoom);
+				// Send Datagram Packet for joining
+//				sendMessage(currentUser.getUserName(), "has joined " + adminRoom.getGroupName());
+				
+			} else if (globalGroupList.size() == 1) {
+				// No other clients has a more than the Lobby in their group list
+				// There are clients who gave back a more updated group list
+				System.out.println("I didn't get any chat back");
+				currentUser = new User("Anonymous" + Integer.toString(globalGroupList.get(0).getUserList().size()), "230.1.1.1");
+			} else {
+				
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Function to Join Group
+	 */
+	public void joinGroup(Group groupToJoin) {
+		try {
+			// Join group by IP Address and port
+			multicastGroup = InetAddress.getByName(groupToJoin.IPAddress);
+			multicastSocket.joinGroup(multicastGroup);
+			// Set joined group as User's active group
+			currentUser.setCurrentIP(groupToJoin.IPAddress);
+			// Add User into the group
+			groupToJoin.addUser(currentUser);
+			// Adding the joined group into Global Group List held by all clients
+			globalGroupList.add(groupToJoin);
+			// Store the joined group into the current user's Group List
+			currentUser.groupList.add(groupToJoin);
+			// Send Datagram Packet for joining
+			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
+			newThread();
+			// Broadcast updates of groupList to all clients
+			sendGroupData(globalGroupList);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Function to create group and append creator into group
 	 * @param groupName
 	 */
 	public void createGroup(String groupName) {
@@ -190,8 +248,6 @@ public class GroupController {
 			// Room does not exist, return user's list with room created
 			Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),groupName);
 			joinGroup(newGroup);
-			// Broadcast the creation of a new group to all clients
-			sendGroupData(globalGroupList);
 		}	
 	}
 	
@@ -294,5 +350,35 @@ public class GroupController {
 			}
 		}
 		return currentList;
+	}
+	
+	/**
+	 * Function to check if user is in list
+	 * @param userList
+	 * @param user
+	 * @return
+	 */
+	public boolean isInUserList(List<User> userList, User user) {
+		for(User tempuser : userList) {
+			if (tempuser.getUserName().equals(user.getUserName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Function to check if group is in list
+	 * @param groupList
+	 * @param group
+	 * @return
+	 */
+	public boolean isInGroupList(List<Group> groupList, Group group) {
+		for(Group tempgroup : groupList) {
+			if (tempgroup.getIPAddress().equals(group.getIPAddress())) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

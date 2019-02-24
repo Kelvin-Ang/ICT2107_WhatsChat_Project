@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -35,7 +36,10 @@ public class GroupInformation extends JFrame {
 	private InetAddress adminGroup = null;
 	private MulticastSocket adminSocket = null;
 	private Group currentGroup;
-	
+	public static GroupInformation obj = null;
+	private GroupController groupController;
+
+
 	/**
 	 * Launch the application.
 	 */
@@ -54,14 +58,18 @@ public class GroupInformation extends JFrame {
 		});
 	}
 
+	public void setGroupController(GroupController groupController) {
+		this.groupController = groupController;
+	}
+	
+	public Group getCurrentGroup() {
+		return currentGroup;
+	}
+
 	/**
 	 * Create the application.
 	 */
 	public GroupInformation() {
-		/**
-		 * Setting up initialization
-		 */
-		initialise();
 		
 		/**
 		 * User Interface
@@ -77,6 +85,7 @@ public class GroupInformation extends JFrame {
 		contentPane.add(lblGroupName);
 		
 		txtGroupName = new JTextField();
+		txtGroupName.setText("Hi");
 		txtGroupName.setBounds(85, 10, 200, 25);
 		contentPane.add(txtGroupName);
 		txtGroupName.setColumns(10);
@@ -109,10 +118,6 @@ public class GroupInformation extends JFrame {
 		));
 		groupTable.getColumnModel().getColumn(0).setPreferredWidth(30);
 		scrollPaneGroup.setViewportView(groupTable);
-		/**
-		 * Populate Data into JTable
-		 */
-		addRowToJTable();
 		
 		JButton btnNewButton = new JButton("Set Active Group");
 		btnNewButton.setBounds(45, 335, 150, 25);
@@ -124,49 +129,20 @@ public class GroupInformation extends JFrame {
 	}
 	
 	/**
-	 * Function to initialise the data
+	 * Function to populate the group's data into Group Information
+	 * @param currentGroup
 	 */
-	public void initialise() {
-		// Stubs
-		currentGroup = new Group("230.1.1.2", "Group1");
-		try {
-			// Connecting to admin room for broad messages
-			adminGroup = InetAddress.getByName("230.1.1.1");
-			adminSocket = new MulticastSocket(6789);
-			adminSocket.joinGroup(adminGroup);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Function to fetch array list of users
-	 */
-	public ArrayList<User> getUserList() {
-		ArrayList<User> userList = new ArrayList<User>();
-		User u1 = new User("Darren", "Group1");
-		User u2 = new User("Darren1", "Group2");
-		User u3 = new User("Darren2", "Group1");
-		User u4 = new User("Darren3", "Group1");
-		User u5 = new User("Darren4", "Group1");
-		userList.add(u1);
-		userList.add(u2);
-		userList.add(u3);
-		userList.add(u4);
-		userList.add(u5);
-		 
-		return userList;
-	}
-	
-	/**
-	 * Function to populate the JTable with model
-	 */
-	public void addRowToJTable() {
+	public void setCurrentGroup(Group currentGroup) {
+		txtGroupName.setText(currentGroup.getGroupName());
+		/**
+		 * Populate Data into JTable
+		 */
 		DefaultTableModel model = (DefaultTableModel) groupTable.getModel();
-		ArrayList<User> userList = getUserList();
+		model.setRowCount(0);
+		List<User> userList = currentGroup.getUserList();
 		Object rowData[] = new Object[2];
 		for (int i = 0; i < userList.size(); i++) {
-			if (userList.get(i).activeGroup.equals(currentGroup.groupName)) {
+			if (userList.get(i).currentIP.equals(currentGroup.IPAddress)) {
 				rowData[0] = "Active";
 			} else {
 				rowData[0] = "Not Active";
@@ -178,11 +154,24 @@ public class GroupInformation extends JFrame {
 		TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<DefaultTableModel>(model);
 		groupTable.setRowSorter(sorter);
 	}
+
 	
 	/**
 	 * Function to close the Frame
 	 */
 	public void CloseFrame() {
 		super.dispose();
+	}
+	
+	/**
+	 * Implement Singleton pattern to ensure only one instance can be called
+	 * @return
+	 */
+	public static GroupInformation getObj() {
+		if (obj == null) {
+			obj = new GroupInformation();
+			obj.setLocationRelativeTo(null);
+		}
+		return obj;
 	}
 }
