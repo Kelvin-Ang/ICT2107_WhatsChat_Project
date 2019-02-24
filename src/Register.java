@@ -188,14 +188,4 @@ public class Register extends JFrame {
 		ImageIcon image = new ImageIcon(newImg);
 		return image;
 	}
-	
-	void showNewScreen() {
-		panel2 = new JPanel();
-		nextButton = new JButton("NEXT");
-		panel2.add(nextButton);
-		frame.remove(contentPane);
-		frame.setContentPane(panel2);
-		frame.validate();
-        frame.repaint();
-	}
 }
