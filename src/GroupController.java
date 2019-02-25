@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -102,6 +103,8 @@ public class GroupController {
 							case BROADCAST_USER_LIST:
 								// Update global User list to latest
 								globalUserList = new ArrayList<User>(objectDataReceived.userData);
+								System.out.println("Printing out updated user list" + globalUserList.toString());
+								System.out.println("Printing out updated group list" + globalGroupList.toString());
 								break;
 							case REQUEST_FOR_USERS:
 								// All clients to send out their global user list
@@ -353,31 +356,19 @@ public class GroupController {
 		return currentGroupList;
 	}
 	
-//	/**
-//	 * Function to convert User list into ListModel for JList
-//	 * @return
-//	 */
-//	public DefaultListModel<User> convertUserListToListModel(){
-//		// Initialize ListModel
-//		DefaultListModel<User> currentGroupList = new DefaultListModel<User>();
-//		// Populate ListModel with the current user's group list
-//		for(String userGroupIPAddress : currentUser.groupList) {
-//			for(Group group : globalGroupList) {
-//				// If the user's group list has same IP as group
-//				if (userGroupIPAddress.equals(group.getIPAddress())) {
-//					// Group is user's active group
-//					if (group.getIPAddress().equals(currentUser.getCurrentIP())) {
-//						// Append a <Active> tag at the back of the active group
-//						Group tempGroup = new Group(group.IPAddress, group.getGroupName() + " <Active>");
-//						currentGroupList.addElement(tempGroup);
-//					} else {
-//						currentGroupList.addElement(group);
-//					}
-//				}
-//			}
-//		}
-//		return currentGroupList;
-//	}
+	/**
+	 * Function to convert User list into ListModel for JList
+	 * @return
+	 */
+	public DefaultListModel<User> convertUserListToListModel(){
+		// Initialize ListModel
+		DefaultListModel<User> currentUserList = new DefaultListModel<User>();
+		// Populate ListModel with the current user's group list
+		for (User user : globalUserList) {
+			currentUserList.addElement(user);
+		}
+		return currentUserList;
+	}
 	
 	/**
 	 * Function to increment IP to unique IP
@@ -543,6 +534,9 @@ public class GroupController {
 	
 	public List<User> getGlobalUserList() {
 		return globalUserList;
+	}
+	public List<Group> getGlobalGroupList() {
+		return globalGroupList;
 	}
 	/**
 	 * END OF GETTERS AND SETTERS

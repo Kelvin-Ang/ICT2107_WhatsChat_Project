@@ -113,6 +113,7 @@ public class ChatApp extends JFrame {
 		
 		// Implement controller into the client's application
 		groupController = new GroupController(messageTextArea);
+		Login login = new Login(this);
 		
 		/**
 		 * Start of User Interface
@@ -126,6 +127,7 @@ public class ChatApp extends JFrame {
 		
 		// Fetch users information and picture
 		try {
+			online.add("Admin");
 			DBController dbCon = new DBController();
 			userList = dbCon.getOnlineUsers(online);
 		} catch (Exception e1) {
@@ -237,7 +239,6 @@ public class ChatApp extends JFrame {
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Login login = new Login(lblUserName, imageLabel, groupController);
 				login.setVisible(true);
 				login.setTitle("Login");
 				login.setLocationRelativeTo(null);
@@ -295,4 +296,24 @@ public class ChatApp extends JFrame {
             return label;
         }
     }
+
+		public JList<Group> getOnGoingGroups() {
+			return onGoingGroups;
+		}
+
+		public JList<User> getOnlineUsers() {
+			return onlineUsers;
+		}
+
+		public JLabel getLblUserName() {
+			return lblUserName;
+		}
+
+		public JLabel getImageLabel() {
+			return imageLabel;
+		}
+
+		public GroupController getGroupController() {
+			return groupController;
+		}
 }

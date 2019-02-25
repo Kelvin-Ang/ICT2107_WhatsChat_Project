@@ -20,7 +20,6 @@ public class Login extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField txtUsername;
-	ChatApp chatApp;
 	
 	User user;
 	private JPasswordField txtPassword;
@@ -29,7 +28,11 @@ public class Login extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public Login(JLabel usernameText, JLabel imageLabel) {
+	public Login(ChatApp chatApp) {
+		
+		// Get Controller
+		groupController = chatApp.getGroupController();
+		
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		setBounds(100, 100, 312, 300);
@@ -89,26 +92,23 @@ public class Login extends JFrame {
 						e.printStackTrace();
 					}
 					if (user != null) {
-						Image myImg = user.getProfilePic().getScaledInstance(labelImage.getWidth(), labelImage.getHeight(), Image.SCALE_SMOOTH);
-						ImageIcon image = new ImageIcon(myImg);
-						imageLabel.setIcon(image);
 						System.out.println("User found");
 						// Update UI, user object and user list using the Database result set
-						usernameText.setText("Logged in as: " + user.getUserName());
-						chatApp = chatApp.getInstance();
+						chatApp.getLblUserName().setText("Logged in as: " + user.getUserName());
 						groupController = chatApp.getGroupController();
 						groupController.getCurrentUser().setUserName(user.getUserName());
 						groupController.getCurrentUser().setPassword(user.getPassword());
-						groupController.getCurrentUser().setProfilePic(myImg);
 						groupController.getCurrentUser().setCurrentIP(user.getCurrentIP());
 						groupController.getCurrentUser().setGroupList(user.getGroupList());
+						System.out.println("Users personal list" + user.getGroupList().toString());
 						// Update JList for Groups
-						
 						chatApp.getOnGoingGroups().setModel(groupController.convertGroupListToListModel());
 						
 						// Append logged in user into Global User List
 						groupController.getGlobalUserList().add(user);
+						System.out.println("Current User List" + groupController.getGlobalUserList().toString());
 						groupController.sendUserData(groupController.getGlobalUserList());
+//						chatApp.getOnlineUsers().setModel(groupController.convertUserListToListModel());
 						setVisible(false);
 						dispose();
 					}

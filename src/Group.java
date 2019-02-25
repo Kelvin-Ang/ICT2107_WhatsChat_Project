@@ -12,7 +12,6 @@ public class Group implements Serializable {
 	public Group(String IPAddress,String groupName) {
 		this.IPAddress = IPAddress;
 		this.groupName = groupName;
-	
 	}
 	
 	public Group(Group group) {
