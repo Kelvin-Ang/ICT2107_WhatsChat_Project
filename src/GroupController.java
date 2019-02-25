@@ -1,23 +1,24 @@
-import java.awt.image.BufferedImage;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
-import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
 import javax.swing.JTextArea;
 
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
 public class GroupController {
 	
@@ -30,26 +31,28 @@ public class GroupController {
 	private MulticastSocket multicastSocket = null;
 	private User currentUser;
 	private List<User> globalUserList = new ArrayList<>();
-	private List<Group> globalGroupList = new ArrayList<>();
+	private static List<Group> globalGroupList = new ArrayList<>();
+	Random rand = new Random();
+	private ChatApp chatApp;
+	
+	// Declare constants for commands
+	public static final String REQUEST_FOR_GROUPS = "RequestGroups";
+	public static final String BROADCAST_GROUP_LIST = "BroadcastGroups";
+	public static final String REQUEST_FOR_USERS = "RequestUsers";
+	public static final String BROADCAST_USER_LIST = "BroadcastUsers";
+	public static final String SEND_MESSAGE_TO_GROUP = "SendMessage";
 
 	/**
 	 * Constructor for Non-Login
 	 * @param messageTextArea
 	 */
-	public GroupController(JTextArea messageTextArea) {
-		this.messageTextArea = messageTextArea;
+	public GroupController(ChatApp chatApp) {
+		this.chatApp = chatApp;
+		messageTextArea = chatApp.getMessageTextArea();
 		joinLobby();
 	}
 	
 	/* TO-DO Login function to restore state by changing Controller's attributes */
-	
-	/**
-	 * Getter for Current User
-	 * @return
-	 */
-	public User getCurrentUser() {
-		return currentUser;
-	}
 	
 	/**
 	 * Listener for Datagram Packet
@@ -71,7 +74,7 @@ public class GroupController {
 						// Convert Datagram Packet to DataSend object
 						try {
 							objectDataReceived = (DataSend) ois.readObject();
-						} catch (ClassNotFoundException e) {
+						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {
 							ois.close();
@@ -81,7 +84,7 @@ public class GroupController {
 						 * Determine the command and execute appropriate action
 						 */
 						switch(objectDataReceived.command) {
-							case "Send":
+							case SEND_MESSAGE_TO_GROUP:
 								// Only receieve packets from user's active group
 								if (objectDataReceived.multicastGroupIP.equals(InetAddress.getByName(currentUser.currentIP))) {
 									for(String data : objectDataReceived.stringData) {
@@ -89,15 +92,30 @@ public class GroupController {
 									}
 								}
 								break;
-							case "BroadcastGroups":
-								// Remove all duplicated in received group from own globalGroupList
-								objectDataReceived.groupData.removeAll(globalGroupList);
-								// Merge the rest of new received groups into own globalGroupList
-								globalGroupList.addAll(objectDataReceived.groupData);
+							case BROADCAST_GROUP_LIST:
+								// Update global Group list to latest
+								globalGroupList = new ArrayList<Group>(objectDataReceived.groupData);
 								break;
-							case "RequestGroups":
+							case REQUEST_FOR_GROUPS:
 								// All clients to send out their global group list
-								sendGroupData(globalGroupList);
+								if(!currentUser.getUserName().equals(objectDataReceived.sender)) {
+									sendGroupData(globalGroupList);
+								}	
+								break;
+							case BROADCAST_USER_LIST:
+								// Update global User list to latest
+								globalUserList = new ArrayList<User>(objectDataReceived.userData);
+								if (globalUserList.size() > 0) {
+									chatApp.convertUserListToListModel();
+								}
+//								System.out.println("Printing out updated user list" + globalUserList.toString());
+//								System.out.println("Printing out updated group list" + globalGroupList.toString());
+								break;
+							case REQUEST_FOR_USERS:
+								// All clients to send out their global user list
+								if(!currentUser.getUserName().equals(objectDataReceived.sender)) {
+									sendUserData(globalUserList);
+								}
 								break;
 							default:
 								break;
@@ -115,6 +133,8 @@ public class GroupController {
 	 * @param message
 	 */
 	public void sendMessage(String source, String message) {
+		System.out.println("================ Send message function called ================");
+		System.out.println("Displaying current globalList" + globalGroupList.toString());
 		try {
 			// Initialise SendData class
 			DataSend sendingData = new DataSend();
@@ -124,12 +144,55 @@ public class GroupController {
 			message = source + " : " + message;
 			stringData.add(message);
 			sendingData.setStringData(stringData);
-			sendingData.setCommand("Send");
+			sendingData.setCommand(SEND_MESSAGE_TO_GROUP);
+			sendingData.setSender(currentUser.userName);
 			sendingData.setMulticastGroupIP(multicastGroup);
 			byte[] buf = toByte(sendingData);
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
 			multicastSocket.send(dgpSend);
+			if (!source.equals("System Error")) {
+				// Storing every message to keep track of last ten messages
+				storeGroupMessages(currentUser.currentIP, message);
+			}
 			System.out.println(multicastGroup);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Function to broadcast current user list to all clients
+	 * @param groupList
+	 */
+	public void sendUserData(List<User> userList) {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setUserData(userList);
+			sendingData.setCommand(BROADCAST_USER_LIST);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);	
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Function to request for current group list from all clients
+	 * @param groupList
+	 */
+	public void getUserData() {
+		System.out.println("requesting user data");
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(REQUEST_FOR_USERS);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);	
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -143,7 +206,8 @@ public class GroupController {
 		try {
 			DataSend sendingData = new DataSend();
 			sendingData.setGroupData(groupList);
-			sendingData.setCommand("BroadcastGroups");
+			sendingData.setCommand(BROADCAST_GROUP_LIST);
+			sendingData.setSender(currentUser.userName);
 			sendingData.setMulticastGroupIP(multicastLobby);
 			byte[] buf = toByte(sendingData);	
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
@@ -158,9 +222,11 @@ public class GroupController {
 	 * @param groupList
 	 */
 	public void getGroupData() {
+		System.out.println("requesting groups data");
 		try {
 			DataSend sendingData = new DataSend();
-			sendingData.setCommand("RequestGroups");
+			sendingData.setCommand(REQUEST_FOR_GROUPS);
+			sendingData.setSender(currentUser.userName);
 			sendingData.setMulticastGroupIP(multicastLobby);
 			byte[] buf = toByte(sendingData);	
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
@@ -181,19 +247,23 @@ public class GroupController {
 			multicastGroup = InetAddress.getByName(adminRoom.getIPAddress());
 			multicastSocket = new MulticastSocket(6789);
 			multicastSocket.joinGroup(multicastLobby);
+			currentUser = new User("Anonymous" + rand.nextInt(9999999), "230.1.1.1");
+			
 			newThread();
 			// Request group data from other clients
 			getGroupData();
+			// Request user data from other clients
+			getUserData();
 			// globalGroupList was never used before
 			if (globalGroupList == null || globalGroupList.isEmpty()) {
 				// Set lobby as User's active group
-				currentUser = new User("Anonymous", "230.1.1.1");
+				//currentUser = new User("Anonymous ", "230.1.1.1");
 				// Add User into the group
 				adminRoom.addUser(currentUser);
 				// Adding the joined group into Global Group List held by all clients
 				globalGroupList.add(adminRoom);
 				// Store the joined group into the current user's Group List
-				currentUser.groupList.add(adminRoom);
+				currentUser.groupList.add(adminRoom.getIPAddress());
 				// Send Datagram Packet for joining
 //				sendMessage(currentUser.getUserName(), "has joined " + adminRoom.getGroupName());
 				
@@ -201,10 +271,26 @@ public class GroupController {
 				// No other clients has a more than the Lobby in their group list
 				// There are clients who gave back a more updated group list
 				System.out.println("I didn't get any chat back");
-				currentUser = new User("Anonymous" + Integer.toString(globalGroupList.get(0).getUserList().size()), "230.1.1.1");
+				//currentUser = new User("Anonymous" + Integer.toString(globalGroupList.get(0).getUserList().size()), "230.1.1.1");
 			} else {
 				
 			}
+			
+			new java.util.Timer().schedule( 
+			        new java.util.TimerTask() {
+			            @Override
+			            public void run() {
+			            	for(Group group : globalGroupList) {
+			    				if(group.IPAddress.equals("230.1.1.1")) {
+			    					displayGroupMessages(group);
+			    				}
+			    			}
+			            }
+			        }, 
+			        1000 
+			);
+			
+			
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -225,7 +311,7 @@ public class GroupController {
 			// Adding the joined group into Global Group List held by all clients
 			globalGroupList.add(groupToJoin);
 			// Store the joined group into the current user's Group List
-			currentUser.groupList.add(groupToJoin);
+			currentUser.groupList.add(groupToJoin.getIPAddress());
 			// Send Datagram Packet for joining
 			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
 			newThread();
@@ -243,7 +329,7 @@ public class GroupController {
 	public void createGroup(String groupName) {
 		// Room already exist return user's current list without room creation
 		if (!(getRoomCreated(globalGroupList, groupName) == -1)) {
-			sendMessage("System Error", "Room name already taken");
+			sendMessage("System Error", "Group name \"" + groupName + "\" is already taken");
 		} else {
 			// Room does not exist, return user's list with room created
 			Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),groupName);
@@ -255,20 +341,40 @@ public class GroupController {
 	 * Function to convert Group list into ListModel for JList
 	 * @return
 	 */
-	public DefaultListModel<Group> getCurrentUserGroupList(){
+	public DefaultListModel<Group> convertGroupListToListModel(){
 		// Initialize ListModel
 		DefaultListModel<Group> currentGroupList = new DefaultListModel<Group>();
 		// Populate ListModel with the current user's group list
-		for(Group groups : currentUser.groupList) {
-			// Append a <Active> tag at the back of the active group
-			if (groups.IPAddress.equals(currentUser.currentIP)) {
-				Group tempGroup = new Group(groups.IPAddress, groups.getGroupName() + " <Active>");
-				currentGroupList.addElement(tempGroup);
-			} else {
-				currentGroupList.addElement(groups);
+		for(String userGroupIPAddress : currentUser.groupList) {
+			for(Group group : globalGroupList) {
+				// If the user's group list has same IP as group
+				if (userGroupIPAddress.equals(group.getIPAddress())) {
+					// Group is user's active group
+					if (group.getIPAddress().equals(currentUser.getCurrentIP())) {
+						// Append a <Active> tag at the back of the active group
+						Group tempGroup = new Group(group.IPAddress, group.getGroupName() + " <Active>");
+						currentGroupList.addElement(tempGroup);
+					} else {
+						currentGroupList.addElement(group);
+					}
+				}
 			}
 		}
 		return currentGroupList;
+	}
+	
+	/**
+	 * Function to convert User list into ListModel for JList
+	 * @return
+	 */
+	public DefaultListModel<User> convertUserListToListModel(){
+		// Initialize ListModel
+		DefaultListModel<User> currentUserList = new DefaultListModel<User>();
+		// Populate ListModel with the current user's group list
+		for (User user : globalUserList) {
+			currentUserList.addElement(user);
+		}
+		return currentUserList;
 	}
 	
 	/**
@@ -290,6 +396,40 @@ public class GroupController {
 			String newIPAdd = data[0] + "." + data[1] + "." + data[2] + "." + String.valueOf(newIP);
 			return newIPAdd;
 		}	
+	}
+	
+	/**
+	 * Function to store last ten message in group chat
+	 * @param multiCastGroup
+	 * @param message
+	 * @throws UnknownHostException 
+	 */
+	public void storeGroupMessages(String groupIpAddress,String message) {
+		
+		//check for the Group in globalGroupList and update the group messages
+		for(Group group : globalGroupList) {
+			if(group.IPAddress.equals(groupIpAddress)) {
+				System.out.println(groupIpAddress+" located");
+				// Ensure that only 10 messages are stored
+				if(group.lastTenMessage.size()>9) {
+					group.lastTenMessage.remove(0);
+				}
+				group.lastTenMessage.add(message);
+				// Broadcast updates of groupList to all clients
+				sendGroupData(globalGroupList);
+			}
+		}
+	}
+	
+	/**
+	 * Function to Display messages in group when join
+	 * @param group
+	 */	
+	public void displayGroupMessages(Group group) {
+		messageTextArea.setText(null);
+		for(String message : group.lastTenMessage) {
+			messageTextArea.append(message+ "\n");
+		}
 	}
 
 	/**
@@ -334,6 +474,16 @@ public class GroupController {
 	public List<User> addUser(List<User> currentList, User newUser) {
 		currentList.add(newUser);
 		return currentList;
+	}
+	
+	public Group convertIPAddressToGroup(String IPAddress) {
+		Group convertedGroup = null;
+		for (Group group : globalGroupList) {
+			if (group.getIPAddress().equals(IPAddress)) {
+				convertedGroup = new Group(group);
+			}
+		}
+		return convertedGroup;
 	}
 	
 	/**
@@ -381,4 +531,25 @@ public class GroupController {
 		}
 		return false;
 	}
+	
+	/**
+	 * START OF GETTERS AND SETTERS
+	 */
+	public User getCurrentUser() {
+		return currentUser;
+	}
+	
+	public void setCurrentUser(User user) {
+		this.currentUser = user;
+	}
+	
+	public List<User> getGlobalUserList() {
+		return globalUserList;
+	}
+	public List<Group> getGlobalGroupList() {
+		return globalGroupList;
+	}
+	/**
+	 * END OF GETTERS AND SETTERS
+	 */
 }

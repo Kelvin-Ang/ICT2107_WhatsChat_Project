@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="C:/Users/lim_5/OneDrive/Documents/GitHub/ICT2107_WhatsChat_Project/JTattoo-1.6.11.jar"/>
+	<classpathentry kind="lib" path="JTattoo-1.6.11.jar"/>
 	<classpathentry kind="lib" path="C:/Users/lim_5/OneDrive/Documents/GitHub/ICT2107_WhatsChat_Project/mysql-connector-java-8.0.15.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

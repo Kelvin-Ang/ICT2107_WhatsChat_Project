@@ -1,15 +1,16 @@
 import java.awt.Image;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class User implements Serializable {
 
 	String userName; // Name of user
 	String password; // Password of user
 	String currentIP; // Current active group
-	Image profilePic; // Display picture of user
-	List<Group> groupList = new ArrayList<>(); // Groups that the user is in
+	List<String> groupList = new ArrayList<>(); // IP Address of the groups the user is in
 	
 	public User(String userName, String currentIP) {
 		this.userName = userName;
@@ -32,11 +33,12 @@ public class User implements Serializable {
 		this.currentIP = currentIP;
 	}
 
-	public List<Group> getGroupList() {
+	public List<String> getGroupList() {
 		return groupList;
 	}
 
-	public void setGroupList(List<Group> groupList) {
+	public void setGroupList(List<String> groupList) {
+		groupList.add(0, "230.1.1.1");
 		this.groupList = groupList;
 	}
 
@@ -44,21 +46,8 @@ public class User implements Serializable {
 		this.password = password;
 	}
 
-	public void setProfilePic(Image profilePic) {
-		this.profilePic = profilePic;
-	}
-
-	public User(String userName, String password, Image profilePic) {
-		this.userName = userName;
-		this.password = password;
-		this.profilePic = profilePic;
-	}
-
 	public String getPassword() {
 		return password;
-	}
-	public Image getProfilePic() {
-		return profilePic;
 	}
 	
 	@Override

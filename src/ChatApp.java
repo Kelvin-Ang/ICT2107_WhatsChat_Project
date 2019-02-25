@@ -1,4 +1,3 @@
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.EventQueue;
@@ -19,9 +18,16 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -58,27 +64,27 @@ public class ChatApp extends JFrame {
 
 	// Declare UI variables
 	private JPanel contentPane;
-	JList<Group> groups;
+	JList<Group> onGoingGroups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
 	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel imageLabel;
+	private JLabel lblUserName, imageLabel;
 	
 	// Declare value variables
 	GroupController groupController;
-	static ChatApp frame;
-	
+
+	// Users variables
 	UserList userList;
 	ArrayList<String> nameList;
 	ArrayList<Image> imageList;
-	
+	DefaultListModel userModel;
 	JList nameJList;
 	JList<Image> imageJList;
 	
 	ArrayList<String> online = new ArrayList<String>();
-	
 	private Map<String, Image> imageMap;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -86,13 +92,16 @@ public class ChatApp extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					messageTextArea = new JTextArea();
-					frame = new ChatApp();
-					
+					ChatApp frame = new ChatApp();
 					frame.setVisible(true);
+					frame.setTitle("WhatsChat");
+					frame.setLocationRelativeTo(null);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+
 			}
 		});
 	}
@@ -101,7 +110,11 @@ public class ChatApp extends JFrame {
 	 * Create the frame.
 	 */
 	public ChatApp() {
-		groupController = new GroupController(messageTextArea);
+		
+		// Implement controller into the client's application
+		groupController = new GroupController(this);
+		Login login = new Login(this);
+		userModel = new DefaultListModel();
 		
 		/**
 		 * Start of User Interface
@@ -113,18 +126,24 @@ public class ChatApp extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		
+		// Fetch users information and picture
 		try {
+			for (User user : groupController.getGlobalUserList()) {
+				online.add(user.getUserName());
+			}
 			DBController dbCon = new DBController();
 			userList = dbCon.getOnlineUsers(online);
 		} catch (Exception e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 120, 180, 250);
 		contentPane.add(scrollPane);
-		nameJList = new JList(userList.getNameList().toArray());
+		for (String name : userList.getNameList()) {
+			userModel.addElement(name);
+		}
+		nameJList = new JList(userModel);
 		imageMap = userList.getUserList();
 		nameJList.setCellRenderer(new listRenderer());
 		scrollPane.setViewportView(nameJList);
@@ -132,20 +151,28 @@ public class ChatApp extends JFrame {
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-		groups = new JList<Group>(groupController.getCurrentUserGroupList());
-		scrollPane_1.setViewportView(groups);
+		onGoingGroups = new JList<Group>(groupController.convertGroupListToListModel());
+		onGoingGroups.addMouseListener(new MouseAdapter() {
+			@SuppressWarnings("static-access")
+		    public void mouseClicked(MouseEvent evt) {
+		        JList list = (JList)evt.getSource();
+		        if (evt.getClickCount() == 2) {
+		            // Double-click detected
+		            int index = list.locationToIndex(evt.getPoint());
+			    	GroupInformation groupInformation = new GroupInformation();
+			    	groupInformation.getObj().setGroupController(groupController);
+			    	groupInformation.getObj().setCurrentGroup(groupController.convertIPAddressToGroup(groupController.getCurrentUser().getGroupList().get(index)));
+			    	groupInformation.getObj().setVisible(true);
+			    	groupInformation.getObj().setTitle(groupController.convertIPAddressToGroup(groupController.getCurrentUser().getGroupList().get(index)).getGroupName() + " Information");
+		        }
+		    }
+		});
+		scrollPane_1.setViewportView(onGoingGroups);
 
 		JScrollPane scrollPane_2 = new JScrollPane();
 		scrollPane_2.setBounds(430, 120, 420, 250);
 		contentPane.add(scrollPane_2);
 		scrollPane_2.setViewportView(messageTextArea);
-		DefaultListModel<User> model = new DefaultListModel<>();
-		User u1 = new User("Darren", "230.1.1.1");
-		User u2 = new User("Ziyi", "230.1.1.1");
-		User u3 = new User("Kelvin", "230.1.1.1");
-		model.addElement(u1);
-		model.addElement(u2);
-		model.addElement(u3);
 
 		JLabel lblOnlineUser = new JLabel("Online Users");
 		lblOnlineUser.setFont(new Font("Tahoma", Font.PLAIN, 15));
@@ -162,20 +189,25 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-		JLabel lblUserName = new JLabel("User Name");
+		lblUserName = new JLabel("");
+		lblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblUserName.setText(groupController.getCurrentUser().getUserName());
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(582, 34, 129, 18);
+		lblUserName.setBounds(700, 10, 150, 25);
 		contentPane.add(lblUserName);
 		
 		imageLabel = new JLabel("");
-		imageLabel.setBounds(431, 10, 84, 68);
+		imageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		imageLabel.setBounds(750, 35, 100, 80);
 		contentPane.add(imageLabel);
-		
+
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Register register = new Register(lblUserName, imageLabel);
 				register.setVisible(true);
+				register.setTitle("Register");
+				register.setLocationRelativeTo(null);
 			}
 		});
 		registerUserBtn.setBounds(10, 10, 150, 25);
@@ -185,7 +217,7 @@ public class ChatApp extends JFrame {
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
-				groups.setModel(groupController.getCurrentUserGroupList());
+				onGoingGroups.setModel(groupController.convertGroupListToListModel());
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);
@@ -213,18 +245,44 @@ public class ChatApp extends JFrame {
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Login login = new Login(lblUserName, imageLabel);
 				login.setVisible(true);
+				login.setTitle("Login");
+				login.setLocationRelativeTo(null);
 			}
 		});
 		btnLogin.setBounds(170, 10, 150, 25);
 		contentPane.add(btnLogin);
-		
 		/**
 		 * End of User Interface
 		 */
+		
+		/**
+		 * Start of Enter Key Listeners
+		 */
+		createGroup_txt.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					groupController.createGroup(createGroup_txt.getText());
+					onGoingGroups.setModel(groupController.convertGroupListToListModel());
+				}
+			}
+		});
+		
+		sendMessage_txt.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+				}
+			}
+		});
+		/**
+		 * End of Enter Key Listeners
+		 */
 	}
-	public class listRenderer extends DefaultListCellRenderer {
+
+		public class listRenderer extends DefaultListCellRenderer {
 
         Font font = new Font("helvitica", Font.BOLD, 20);
 
@@ -244,4 +302,59 @@ public class ChatApp extends JFrame {
             return label;
         }
     }
-};
+		
+		public void convertUserListToListModel() {
+			try {
+				// Start with an empty list
+				online.clear();
+				userModel.clear();
+				// Loop through global user list to update list to query database
+				for (User user : groupController.getGlobalUserList()) {
+					online.add(user.getUserName());
+				}
+				DBController dbCon = new DBController();
+				userList = dbCon.getOnlineUsers(online);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			// Append fetched results into userModel
+			for (String name : userList.getNameList()) {
+				userModel.addElement(name);
+			}
+			nameJList.setModel(userModel);
+			imageMap = userList.getUserList();
+			nameJList.setCellRenderer(new listRenderer());
+		}
+
+		/**
+		 * START OF GETTERS AND SETTERS
+		 */
+		public JList<Group> getOnGoingGroups() {
+			return onGoingGroups;
+		}
+
+		public JList<User> getOnlineUsers() {
+			return onlineUsers;
+		}
+
+		public JLabel getLblUserName() {
+			return lblUserName;
+		}
+
+		public JLabel getImageLabel() {
+			return imageLabel;
+		}
+
+		public GroupController getGroupController() {
+			return groupController;
+		}
+		
+		public static JTextArea getMessageTextArea() {
+			return messageTextArea;
+		}
+		/**
+		 * END OF GETTERS AND SETTERS
+		 */
+
+
+}

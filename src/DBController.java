@@ -82,13 +82,11 @@ public class DBController {
 		ResultSet result = insertUser.executeQuery();
 		User user = null;
 		if (result.next()) {
-			byte[] imageByte = result.getBytes("profilePic");
-			ImageIcon image = new ImageIcon(imageByte);
-			Image im = image.getImage();
-			user = new User(username, password, im);
+			user = new User(username, password);
 		}
 		if (user != null) {
 			user.setGroupList(retrieveUserGroup(username));
+			user.setCurrentIP(result.getString("IPAddress"));
 			return user;
 		}
 		return null;
@@ -159,7 +157,7 @@ public class DBController {
 			System.out.println(e);
 		}
 	}
-	public static List retrieveUserGroup(String username) throws Exception {
+	public static List<String> retrieveUserGroup(String username) throws Exception {
 			Connection conn = getConnection();
 			PreparedStatement retrieveUserGroupPair = conn
 					.prepareStatement("SELECT IPAddress from UserGroup WHERE username = '" + username + "'");

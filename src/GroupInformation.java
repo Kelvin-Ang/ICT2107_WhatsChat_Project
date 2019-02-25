@@ -49,8 +49,6 @@ public class GroupInformation extends JFrame {
 				try {
 					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
 					GroupInformation window = new GroupInformation();
-					window.setVisible(true);
-					window.setTitle("Group Information");
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

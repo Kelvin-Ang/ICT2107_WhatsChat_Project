@@ -1,13 +1,2 @@
-
+bin/
 .classpath
-bin/ChatApp$1.class
-bin/ChatApp$2.class
-bin/ChatApp$3.class
-bin/ChatApp$4.class
-bin/ChatApp$5.class
-bin/ChatApp$6.class
-bin/ChatApp.class
-bin/GroupController.class
-bin/GroupInformation$1.class
-bin/GroupInformation.class
-bin/User.class

@@ -23,11 +23,18 @@ public class Login extends JFrame {
 	
 	User user;
 	private JPasswordField txtPassword;
+	private GroupController groupController;
+	
 	/**
 	 * Create the frame.
 	 */
-	public Login(JLabel usernameText, JLabel imageLabel) {
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	public Login(ChatApp chatApp) {
+		
+		// Get Controller
+		groupController = chatApp.getGroupController();
+		
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
 		setBounds(100, 100, 312, 300);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -85,11 +92,22 @@ public class Login extends JFrame {
 						e.printStackTrace();
 					}
 					if (user != null) {
-						Image myImg = user.getProfilePic().getScaledInstance(labelImage.getWidth(), labelImage.getHeight(), Image.SCALE_SMOOTH);
-						ImageIcon image = new ImageIcon(myImg);
-						imageLabel.setIcon(image);
 						System.out.println("User found");
-						usernameText.setText(username);
+						// Update UI, user object and user list using the Database result set
+						chatApp.getLblUserName().setText("Logged in as: " + user.getUserName());
+						groupController = chatApp.getGroupController();
+						groupController.setCurrentUser(user);
+						System.out.println("Users personal list" + user.getGroupList().toString());
+						// Update JList for Groups
+						chatApp.getOnGoingGroups().setModel(groupController.convertGroupListToListModel());
+						
+						// Append logged in user into Global User List
+						groupController.getGlobalUserList().add(user);
+						System.out.println("Current User List" + groupController.getGlobalUserList().toString());
+						System.out.println("Current user group list" + user.getGroupList().toString());
+						groupController.sendUserData(groupController.getGlobalUserList());
+						System.out.println("UPDATED USER LIST" + groupController.getGlobalUserList());
+//						chatApp.getOnlineUsers().setModel(groupController.convertUserListToListModel());
 						setVisible(false);
 						dispose();
 					}
