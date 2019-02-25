@@ -37,7 +37,7 @@ public class DBController {
 		try {
 			Connection conn = getConnection();
 			PreparedStatement createTable = conn.prepareStatement(
-					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, PRIMARY KEY(id))");
+					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, IPAddress varchar(20), PRIMARY KEY(id))");
 			createTable.executeUpdate();
 			System.out.println("Table created");
 		} catch (Exception e) {
@@ -55,7 +55,7 @@ public class DBController {
 		}
 		return false;
 	}
-	public static Boolean insertUser(String username, String password, String image) throws Exception {
+	public static Boolean insertUser(String username, String password, String image, String IPAddress) throws Exception {
 			if (existingUsernameExist(username)) {
 				return false;
 			}
@@ -64,8 +64,8 @@ public class DBController {
 				FileInputStream is = new FileInputStream(new File(image));
 				Connection conn = getConnection();
 				PreparedStatement insertUser = conn
-						.prepareStatement("INSERT INTO User (username, password, profilePic) VALUES ('" + username + "', '"
-								+ password + "', ?)");
+						.prepareStatement("INSERT INTO User (username, password, profilePic, IPAddress) VALUES ('" + username + "', '"
+								+ password + "', ?, '" + IPAddress +"')");
 				insertUser.setBinaryStream(1, is);
 				insertUser.executeUpdate();
 			} catch (Exception e) {
@@ -93,6 +93,14 @@ public class DBController {
 		}
 		return null;
 	}
+	
+	public static void updateUserIP(String username, String IPAddress) throws Exception {
+		Connection conn = getConnection();
+		PreparedStatement updateUserIP = conn
+				.prepareStatement("UPDATE User SET IPAddress = '" + IPAddress + "' WHERE username = '" + username + "'");
+		updateUserIP.executeUpdate();
+	}
+	
 	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
 		Connection conn = getConnection();
 		UserList userPair;
