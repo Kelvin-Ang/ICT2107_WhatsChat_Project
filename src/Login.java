@@ -20,9 +20,12 @@ public class Login extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField txtUsername;
+	ChatApp chatApp;
 	
 	User user;
 	private JPasswordField txtPassword;
+	private GroupController groupController;
+	
 	/**
 	 * Create the frame.
 	 */
@@ -90,7 +93,22 @@ public class Login extends JFrame {
 						ImageIcon image = new ImageIcon(myImg);
 						imageLabel.setIcon(image);
 						System.out.println("User found");
-						usernameText.setText(username);
+						// Update UI, user object and user list using the Database result set
+						usernameText.setText("Logged in as: " + user.getUserName());
+						chatApp = chatApp.getInstance();
+						groupController = chatApp.getGroupController();
+						groupController.getCurrentUser().setUserName(user.getUserName());
+						groupController.getCurrentUser().setPassword(user.getPassword());
+						groupController.getCurrentUser().setProfilePic(myImg);
+						groupController.getCurrentUser().setCurrentIP(user.getCurrentIP());
+						groupController.getCurrentUser().setGroupList(user.getGroupList());
+						// Update JList for Groups
+						
+						chatApp.getOnGoingGroups().setModel(groupController.convertGroupListToListModel());
+						
+						// Append logged in user into Global User List
+						groupController.getGlobalUserList().add(user);
+						groupController.sendUserData(groupController.getGlobalUserList());
 						setVisible(false);
 						dispose();
 					}

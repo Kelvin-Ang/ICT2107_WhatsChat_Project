@@ -18,11 +18,14 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.ListModel;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -66,7 +69,7 @@ public class ChatApp extends JFrame {
 	static JTextArea messageTextArea;
 	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
 	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel imageLabel, lblUserName;
+	private JLabel lblUserName, imageLabel;
 	
 	// Declare value variables
 	GroupController groupController;
@@ -140,7 +143,7 @@ public class ChatApp extends JFrame {
 		JScrollPane scrollPane_1 = new JScrollPane();
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
-		onGoingGroups = new JList<Group>(groupController.getCurrentUserGroupList());
+		onGoingGroups = new JList<Group>(groupController.convertGroupListToListModel());
 		onGoingGroups.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("static-access")
 		    public void mouseClicked(MouseEvent evt) {
@@ -150,9 +153,9 @@ public class ChatApp extends JFrame {
 		            int index = list.locationToIndex(evt.getPoint());
 			    	GroupInformation groupInformation = new GroupInformation();
 			    	groupInformation.getObj().setGroupController(groupController);
-			    	groupInformation.getObj().setCurrentGroup(groupController.getCurrentUser().getGroupList().get(index));
+			    	groupInformation.getObj().setCurrentGroup(groupController.convertIPAddressToGroup(groupController.getCurrentUser().getGroupList().get(index)));
 			    	groupInformation.getObj().setVisible(true);
-			    	groupInformation.getObj().setTitle(groupController.getCurrentUser().getGroupList().get(index).getGroupName() + " Information");
+			    	groupInformation.getObj().setTitle(groupController.convertIPAddressToGroup(groupController.getCurrentUser().getGroupList().get(index)).getGroupName() + " Information");
 		        }
 		    }
 		});
@@ -178,12 +181,15 @@ public class ChatApp extends JFrame {
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-		lblUserName = new JLabel("Not Logged In");
+		lblUserName = new JLabel("");
+		lblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblUserName.setText(groupController.getCurrentUser().getUserName());
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(750, 10, 100, 25);
+		lblUserName.setBounds(700, 10, 150, 25);
 		contentPane.add(lblUserName);
 		
 		imageLabel = new JLabel("");
+		imageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		imageLabel.setBounds(750, 35, 100, 80);
 		contentPane.add(imageLabel);
 
@@ -203,7 +209,7 @@ public class ChatApp extends JFrame {
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
-				onGoingGroups.setModel(groupController.getCurrentUserGroupList());
+				onGoingGroups.setModel(groupController.convertGroupListToListModel());
 			}
 		});
 		createGroupBtn.setBounds(10, 50, 150, 25);
@@ -231,7 +237,7 @@ public class ChatApp extends JFrame {
 		JButton btnLogin = new JButton("Login");
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				Login login = new Login(lblUserName, imageLabel);
+				Login login = new Login(lblUserName, imageLabel, groupController);
 				login.setVisible(true);
 				login.setTitle("Login");
 				login.setLocationRelativeTo(null);
@@ -241,6 +247,31 @@ public class ChatApp extends JFrame {
 		contentPane.add(btnLogin);
 		/**
 		 * End of User Interface
+		 */
+		
+		/**
+		 * Start of Enter Key Listeners
+		 */
+		createGroup_txt.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					groupController.createGroup(createGroup_txt.getText());
+					onGoingGroups.setModel(groupController.convertGroupListToListModel());
+				}
+			}
+		});
+		
+		sendMessage_txt.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+				}
+			}
+		});
+		/**
+		 * End of Enter Key Listeners
 		 */
 	}
 

@@ -12,6 +12,14 @@ public class Group implements Serializable {
 	public Group(String IPAddress,String groupName) {
 		this.IPAddress = IPAddress;
 		this.groupName = groupName;
+	
+	}
+	
+	public Group(Group group) {
+		this.IPAddress = group.getIPAddress();
+		this.groupName = group.getGroupName();
+		this.lastTenMessage = group.getLastTenMessage();
+		this.userList = group.getUserList();
 	}
 	
 	public String getIPAddress() {

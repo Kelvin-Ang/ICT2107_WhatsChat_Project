@@ -84,7 +84,7 @@ public class DBController {
 			byte[] imageByte = result.getBytes("profilePic");
 			ImageIcon image = new ImageIcon(imageByte);
 			Image im = image.getImage();
-			User user = new User(username, password, im);
+			User user = new User(result.getString("username"), result.getString("password"), im);
 			return user;
 		}
 		return null;

@@ -9,11 +9,17 @@ public class User implements Serializable {
 	String password; // Password of user
 	String currentIP; // Current active group
 	Image profilePic; // Display picture of user
-	List<Group> groupList = new ArrayList<>(); // Groups that the user is in
+	List<String> groupList = new ArrayList<>(); // IP Address of the groups the user is in
 	
 	public User(String userName, String currentIP) {
 		this.userName = userName;
 		this.currentIP = currentIP;
+	}
+	
+	public User(String userName, String password, Image profilePic) {
+		this.userName = userName;
+		this.password = password;
+		this.profilePic = profilePic;
 	}
 	
 	public String getUserName() {
@@ -32,11 +38,11 @@ public class User implements Serializable {
 		this.currentIP = currentIP;
 	}
 
-	public List<Group> getGroupList() {
+	public List<String> getGroupList() {
 		return groupList;
 	}
 
-	public void setGroupList(List<Group> groupList) {
+	public void setGroupList(List<String> groupList) {
 		this.groupList = groupList;
 	}
 
@@ -45,12 +51,6 @@ public class User implements Serializable {
 	}
 
 	public void setProfilePic(Image profilePic) {
-		this.profilePic = profilePic;
-	}
-
-	public User(String userName, String password, Image profilePic) {
-		this.userName = userName;
-		this.password = password;
 		this.profilePic = profilePic;
 	}
 
