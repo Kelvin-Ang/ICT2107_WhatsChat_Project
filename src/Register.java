@@ -134,6 +134,7 @@ public class Register extends JFrame {
 				char[] cPasswordChar = txtCPassword.getPassword();
 				String password = "";
 				String cPassword = "";
+				String IPAddress = "230.1.1.1";
 				for (int i = 0; i < passwordChar.length; i++) {
 					password += String.valueOf(passwordChar[i]);
 				}
@@ -157,7 +158,7 @@ public class Register extends JFrame {
 						e1.printStackTrace();
 					}
 					try {
-						Boolean insertSuccessful = dbCon.insertUser(username, password, image);
+						Boolean insertSuccessful = dbCon.insertUser(username, password, image, IPAddress);
 						if (insertSuccessful) {
 							lblResult.setText("Account created.");
 							imageLabel.setIcon(finalImage);

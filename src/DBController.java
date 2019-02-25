@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.ImageIcon;
@@ -36,7 +37,7 @@ public class DBController {
 		try {
 			Connection conn = getConnection();
 			PreparedStatement createTable = conn.prepareStatement(
-					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, PRIMARY KEY(id))");
+					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, IPAddress varchar(20), PRIMARY KEY(id))");
 			createTable.executeUpdate();
 			System.out.println("Table created");
 		} catch (Exception e) {
@@ -54,7 +55,7 @@ public class DBController {
 		}
 		return false;
 	}
-	public static Boolean insertUser(String username, String password, String image) throws Exception {
+	public static Boolean insertUser(String username, String password, String image, String IPAddress) throws Exception {
 			if (existingUsernameExist(username)) {
 				return false;
 			}
@@ -63,8 +64,8 @@ public class DBController {
 				FileInputStream is = new FileInputStream(new File(image));
 				Connection conn = getConnection();
 				PreparedStatement insertUser = conn
-						.prepareStatement("INSERT INTO User (username, password, profilePic) VALUES ('" + username + "', '"
-								+ password + "', ?)");
+						.prepareStatement("INSERT INTO User (username, password, profilePic, IPAddress) VALUES ('" + username + "', '"
+								+ password + "', ?, '" + IPAddress +"')");
 				insertUser.setBinaryStream(1, is);
 				insertUser.executeUpdate();
 			} catch (Exception e) {
@@ -79,16 +80,24 @@ public class DBController {
 				.prepareStatement("SELECT * from User WHERE username = '" + username
 						+ "' AND password = '" + password + "'");
 		ResultSet result = insertUser.executeQuery();
-
+		User user = null;
 		if (result.next()) {
-			byte[] imageByte = result.getBytes("profilePic");
-			ImageIcon image = new ImageIcon(imageByte);
-			Image im = image.getImage();
-			User user = new User(result.getString("username"), result.getString("password"));
+			user = new User(username, password);
+		}
+		if (user != null) {
+			user.setGroupList(retrieveUserGroup(username));
 			return user;
 		}
 		return null;
 	}
+	
+	public static void updateUserIP(String username, String IPAddress) throws Exception {
+		Connection conn = getConnection();
+		PreparedStatement updateUserIP = conn
+				.prepareStatement("UPDATE User SET IPAddress = '" + IPAddress + "' WHERE username = '" + username + "'");
+		updateUserIP.executeUpdate();
+	}
+	
 	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
 		Connection conn = getConnection();
 		UserList userPair;
@@ -110,8 +119,55 @@ public class DBController {
 				nameList.add(name);
 			}
 		}
-	
 		userPair = new UserList(nameList, userList);
 		return userPair;
+	}
+	
+	
+	public static void createGroupTable() throws Exception {
+		try {
+			Connection conn = getConnection();
+			PreparedStatement createGroupTable = conn.prepareStatement(
+					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20) PRIMARY KEY(id, IPAddress))");
+			createGroupTable.executeUpdate();
+			System.out.println("Table created");
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
+		try {
+			Connection conn = getConnection();
+			PreparedStatement insertUserGroupPair = conn
+					.prepareStatement("INSERT INTO UserGroup WHERE username(username, IPAddress) VALUES ('" + username + "', '"
+							+ IPAddress + "', ?)");
+			insertUserGroupPair.executeUpdate();
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+	public static void deleteUserGroupPair(String username, String IPAddress) throws Exception {
+		try {
+			Connection conn = getConnection();
+			PreparedStatement deleteUserGroupPair = conn
+					.prepareStatement("DELETE FROM UserGroup WHERE username = '" + username + "' AND IPAddress = '" + IPAddress + "'");
+			deleteUserGroupPair.executeUpdate();
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
+	public static List<String> retrieveUserGroup(String username) throws Exception {
+			Connection conn = getConnection();
+			PreparedStatement retrieveUserGroupPair = conn
+					.prepareStatement("SELECT IPAddress from UserGroup WHERE username = '" + username + "'");
+			ResultSet result = retrieveUserGroupPair.executeQuery();
+			List<String> group = new ArrayList<String>();
+			
+			while (result.next()) {
+				byte[] groupByte = result.getBytes("IPAddress");
+				String groupIP = new String(groupByte);
+				group.add(groupIP);
+			}
+		return group;
 	}
 }
