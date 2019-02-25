@@ -78,7 +78,7 @@ public class ChatApp extends JFrame {
 	UserList userList;
 	ArrayList<String> nameList;
 	ArrayList<Image> imageList;
-	
+	DefaultListModel userModel;
 	JList nameJList;
 	JList<Image> imageJList;
 	
@@ -114,6 +114,7 @@ public class ChatApp extends JFrame {
 		// Implement controller into the client's application
 		groupController = new GroupController(messageTextArea);
 		Login login = new Login(this);
+		userModel = new DefaultListModel();
 		
 		/**
 		 * Start of User Interface
@@ -127,7 +128,9 @@ public class ChatApp extends JFrame {
 		
 		// Fetch users information and picture
 		try {
-			online.add("Admin");
+			for (User user : groupController.getGlobalUserList()) {
+				online.add(user.getUserName());
+			}
 			DBController dbCon = new DBController();
 			userList = dbCon.getOnlineUsers(online);
 		} catch (Exception e1) {
@@ -137,7 +140,10 @@ public class ChatApp extends JFrame {
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(10, 120, 180, 250);
 		contentPane.add(scrollPane);
-		nameJList = new JList(userList.getNameList().toArray());
+		for (String name : userList.getNameList()) {
+			userModel.addElement(name);
+		}
+		nameJList = new JList(userModel);
 		imageMap = userList.getUserList();
 		nameJList.setCellRenderer(new listRenderer());
 		scrollPane.setViewportView(nameJList);
