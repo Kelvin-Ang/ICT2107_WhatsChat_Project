@@ -112,7 +112,7 @@ public class ChatApp extends JFrame {
 	public ChatApp() {
 		
 		// Implement controller into the client's application
-		groupController = new GroupController(messageTextArea);
+		groupController = new GroupController(this);
 		Login login = new Login(this);
 		userModel = new DefaultListModel();
 		
@@ -302,7 +302,33 @@ public class ChatApp extends JFrame {
             return label;
         }
     }
+		
+		public void convertUserListToListModel() {
+			try {
+				// Start with an empty list
+				online.clear();
+				userModel.clear();
+				// Loop through global user list to update list to query database
+				for (User user : groupController.getGlobalUserList()) {
+					online.add(user.getUserName());
+				}
+				DBController dbCon = new DBController();
+				userList = dbCon.getOnlineUsers(online);
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+			// Append fetched results into userModel
+			for (String name : userList.getNameList()) {
+				userModel.addElement(name);
+			}
+			nameJList.setModel(userModel);
+			imageMap = userList.getUserList();
+			nameJList.setCellRenderer(new listRenderer());
+		}
 
+		/**
+		 * START OF GETTERS AND SETTERS
+		 */
 		public JList<Group> getOnGoingGroups() {
 			return onGoingGroups;
 		}
@@ -322,4 +348,13 @@ public class ChatApp extends JFrame {
 		public GroupController getGroupController() {
 			return groupController;
 		}
+		
+		public static JTextArea getMessageTextArea() {
+			return messageTextArea;
+		}
+		/**
+		 * END OF GETTERS AND SETTERS
+		 */
+
+
 }

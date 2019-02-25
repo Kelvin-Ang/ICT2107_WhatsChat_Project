@@ -96,10 +96,7 @@ public class Login extends JFrame {
 						// Update UI, user object and user list using the Database result set
 						chatApp.getLblUserName().setText("Logged in as: " + user.getUserName());
 						groupController = chatApp.getGroupController();
-						groupController.getCurrentUser().setUserName(user.getUserName());
-						groupController.getCurrentUser().setPassword(user.getPassword());
-						groupController.getCurrentUser().setCurrentIP(user.getCurrentIP());
-						groupController.getCurrentUser().setGroupList(user.getGroupList());
+						groupController.setCurrentUser(user);
 						System.out.println("Users personal list" + user.getGroupList().toString());
 						// Update JList for Groups
 						chatApp.getOnGoingGroups().setModel(groupController.convertGroupListToListModel());
@@ -107,7 +104,9 @@ public class Login extends JFrame {
 						// Append logged in user into Global User List
 						groupController.getGlobalUserList().add(user);
 						System.out.println("Current User List" + groupController.getGlobalUserList().toString());
+						System.out.println("Current user group list" + user.getGroupList().toString());
 						groupController.sendUserData(groupController.getGlobalUserList());
+						System.out.println("UPDATED USER LIST" + groupController.getGlobalUserList());
 //						chatApp.getOnlineUsers().setModel(groupController.convertUserListToListModel());
 						setVisible(false);
 						dispose();

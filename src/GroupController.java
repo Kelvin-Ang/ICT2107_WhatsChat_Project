@@ -33,6 +33,7 @@ public class GroupController {
 	private List<User> globalUserList = new ArrayList<>();
 	private static List<Group> globalGroupList = new ArrayList<>();
 	Random rand = new Random();
+	private ChatApp chatApp;
 	
 	// Declare constants for commands
 	public static final String REQUEST_FOR_GROUPS = "RequestGroups";
@@ -45,8 +46,9 @@ public class GroupController {
 	 * Constructor for Non-Login
 	 * @param messageTextArea
 	 */
-	public GroupController(JTextArea messageTextArea) {
-		this.messageTextArea = messageTextArea;
+	public GroupController(ChatApp chatApp) {
+		this.chatApp = chatApp;
+		messageTextArea = chatApp.getMessageTextArea();
 		joinLobby();
 	}
 	
@@ -103,8 +105,11 @@ public class GroupController {
 							case BROADCAST_USER_LIST:
 								// Update global User list to latest
 								globalUserList = new ArrayList<User>(objectDataReceived.userData);
-								System.out.println("Printing out updated user list" + globalUserList.toString());
-								System.out.println("Printing out updated group list" + globalGroupList.toString());
+								if (globalUserList.size() > 0) {
+									chatApp.convertUserListToListModel();
+								}
+//								System.out.println("Printing out updated user list" + globalUserList.toString());
+//								System.out.println("Printing out updated group list" + globalGroupList.toString());
 								break;
 							case REQUEST_FOR_USERS:
 								// All clients to send out their global user list
@@ -247,6 +252,8 @@ public class GroupController {
 			newThread();
 			// Request group data from other clients
 			getGroupData();
+			// Request user data from other clients
+			getUserData();
 			// globalGroupList was never used before
 			if (globalGroupList == null || globalGroupList.isEmpty()) {
 				// Set lobby as User's active group
@@ -530,6 +537,10 @@ public class GroupController {
 	 */
 	public User getCurrentUser() {
 		return currentUser;
+	}
+	
+	public void setCurrentUser(User user) {
+		this.currentUser = user;
 	}
 	
 	public List<User> getGlobalUserList() {
