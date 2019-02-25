@@ -131,7 +131,7 @@ public class DBController {
 		try {
 			Connection conn = getConnection();
 			PreparedStatement createGroupTable = conn.prepareStatement(
-					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20) PRIMARY KEY(id, IPAddress))");
+					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20), PRIMARY KEY(username, IPAddress))");
 			createGroupTable.executeUpdate();
 			System.out.println("Table created");
 		} catch (Exception e) {
