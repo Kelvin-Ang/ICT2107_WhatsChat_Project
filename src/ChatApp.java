@@ -64,12 +64,14 @@ public class ChatApp extends JFrame {
 
 	// Declare UI variables
 	private JPanel contentPane;
-	JList<Group> onGoingGroups;
-	JList<User> onlineUsers;
+	private JList<Group> onGoingGroups;
+	private JList<User> onlineUsers;
 	static JTextArea messageTextArea;
-	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
-	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel lblUserName, imageLabel;
+	private JButton createGroupBtn, sendMessageBtn, registerUserBtn;
+	private JTextField createGroup_txt, sendMessage_txt;
+	private JLabel lblUserName, imageLabel,lblGroups,lblOnlineUser,lblConversations;
+	private JScrollPane scrollPane_1,scrollPane,scrollPane_2;
+	
 	
 	// Declare value variables
 	GroupController groupController;
@@ -111,6 +113,22 @@ public class ChatApp extends JFrame {
 	 */
 	public ChatApp() {
 		
+		//init UI
+		scrollPane_1 = new JScrollPane();
+		scrollPane = new JScrollPane();
+		nameJList = new JList();
+		scrollPane_2 = new JScrollPane();
+		lblGroups = new JLabel("Groups");
+		lblOnlineUser = new JLabel("Online Users");
+		sendMessage_txt = new JTextField();
+		lblConversations = new JLabel("Conversation");
+		createGroupBtn = new JButton("Create Group");
+		sendMessageBtn = new JButton("Send Message");
+		registerUserBtn = new JButton("Register");
+		lblUserName = new JLabel("");
+		imageLabel = new JLabel("");
+		
+		
 		// Implement controller into the client's application
 		groupController = new GroupController(this);
 		Login login = new Login(this);
@@ -133,22 +151,24 @@ public class ChatApp extends JFrame {
 			}
 			DBController dbCon = new DBController();
 			userList = dbCon.getOnlineUsers(online);
+			System.out.println("data reccieve data into user list"+userList.getNameList());
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
 		
-		JScrollPane scrollPane = new JScrollPane();
+		
 		scrollPane.setBounds(10, 120, 180, 250);
 		contentPane.add(scrollPane);
 		for (String name : userList.getNameList()) {
 			userModel.addElement(name);
 		}
-		nameJList = new JList(userModel);
+		
+		System.out.println("jlist init liao "+nameJList);
 		imageMap = userList.getUserList();
 		nameJList.setCellRenderer(new listRenderer());
 		scrollPane.setViewportView(nameJList);
 
-		JScrollPane scrollPane_1 = new JScrollPane();
+		
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
 		onGoingGroups = new JList<Group>(groupController.convertGroupListToListModel());
@@ -169,39 +189,39 @@ public class ChatApp extends JFrame {
 		});
 		scrollPane_1.setViewportView(onGoingGroups);
 
-		JScrollPane scrollPane_2 = new JScrollPane();
+		
 		scrollPane_2.setBounds(430, 120, 420, 250);
 		contentPane.add(scrollPane_2);
 		scrollPane_2.setViewportView(messageTextArea);
 
-		JLabel lblOnlineUser = new JLabel("Online Users");
+		
 		lblOnlineUser.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		lblOnlineUser.setBounds(10, 90, 180, 25);
 		contentPane.add(lblOnlineUser);
 
-		JLabel lblGroups = new JLabel("Groups");
+		
 		lblGroups.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		lblGroups.setBounds(220, 90, 180, 25);
 		contentPane.add(lblGroups);
 
-		JLabel lblConversations = new JLabel("Conversation");
+		
 		lblConversations.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		lblConversations.setBounds(430, 90, 420, 25);
 		contentPane.add(lblConversations);
 		
-		lblUserName = new JLabel("");
+		
 		lblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblUserName.setText(groupController.getCurrentUser().getUserName());
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
 		lblUserName.setBounds(700, 10, 150, 25);
 		contentPane.add(lblUserName);
 		
-		imageLabel = new JLabel("");
+		
 		imageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 		imageLabel.setBounds(750, 35, 100, 80);
 		contentPane.add(imageLabel);
 
-		registerUserBtn = new JButton("Register");
+		
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				Register register = new Register(lblUserName, imageLabel);
@@ -213,7 +233,7 @@ public class ChatApp extends JFrame {
 		registerUserBtn.setBounds(10, 10, 150, 25);
 		contentPane.add(registerUserBtn);
 
-		createGroupBtn = new JButton("Create Group");
+		
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
@@ -228,7 +248,7 @@ public class ChatApp extends JFrame {
 		createGroup_txt.setBounds(170, 50, 170, 25);
 		contentPane.add(createGroup_txt);
 
-		sendMessageBtn = new JButton("Send Message");
+		
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
@@ -237,7 +257,7 @@ public class ChatApp extends JFrame {
 		sendMessageBtn.setBounds(722, 380, 128, 25);
 		contentPane.add(sendMessageBtn);
 
-		sendMessage_txt = new JTextField();
+		
 		sendMessage_txt.setColumns(10);
 		sendMessage_txt.setBounds(10, 380, 706, 25);
 		contentPane.add(sendMessage_txt);
@@ -306,21 +326,30 @@ public class ChatApp extends JFrame {
 		public void convertUserListToListModel() {
 			try {
 				// Start with an empty list
-				online.clear();
-				userModel.clear();
+				ArrayList<String> newOnlineList = new ArrayList<String>();
+				//userModel.clear();
+				userModel = new DefaultListModel();
+				
 				// Loop through global user list to update list to query database
 				for (User user : groupController.getGlobalUserList()) {
-					online.add(user.getUserName());
+					newOnlineList.add(user.getUserName());
+					System.out.println("after add "+online.toString());
 				}
-				DBController dbCon = new DBController();
-				userList = dbCon.getOnlineUsers(online);
+				DBController dbCon1 = new DBController();
+				System.out.println("Before going in");
+				userList = dbCon1.getOnlineUsers(newOnlineList);
+				System.out.println("data recieve in convert into userlistMOdel"+userList.getNameList());
 			} catch (Exception e1) {
 				e1.printStackTrace();
 			}
 			// Append fetched results into userModel
+			System.out.println(userList.getNameList());
 			for (String name : userList.getNameList()) {
+				
 				userModel.addElement(name);
 			}
+			System.out.println("usermodel data "+userModel);
+			
 			nameJList.setModel(userModel);
 			imageMap = userList.getUserList();
 			nameJList.setCellRenderer(new listRenderer());

@@ -267,11 +267,6 @@ public class GroupController {
 				// Send Datagram Packet for joining
 //				sendMessage(currentUser.getUserName(), "has joined " + adminRoom.getGroupName());
 				
-			} else if (globalGroupList.size() == 1) {
-				// No other clients has a more than the Lobby in their group list
-				// There are clients who gave back a more updated group list
-				System.out.println("I didn't get any chat back");
-				//currentUser = new User("Anonymous" + Integer.toString(globalGroupList.get(0).getUserList().size()), "230.1.1.1");
 			} else {
 				
 			}

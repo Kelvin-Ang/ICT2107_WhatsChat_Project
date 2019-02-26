@@ -99,12 +99,12 @@ public class DBController {
 		updateUserIP.executeUpdate();
 	}
 	
-	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
+	public UserList getOnlineUsers(ArrayList<String> user) throws Exception {
 		Connection conn = getConnection();
 		UserList userPair;
 		ArrayList<String> nameList = new ArrayList<String>();
 		Map<String, Image> userList = new HashMap<>();
-		
+		System.out.println("current online user size "+user.toString());
 		for (int i = 0; i < user.size(); i++) {
 			PreparedStatement insertUser = conn
 					.prepareStatement("SELECT * from User WHERE username = '" + user.get(i) + "'");
