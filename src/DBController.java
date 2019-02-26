@@ -39,7 +39,13 @@ public class DBController {
 			PreparedStatement createTable = conn.prepareStatement(
 					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, IPAddress varchar(20), PRIMARY KEY(id))");
 			createTable.executeUpdate();
-			System.out.println("Table created");
+			System.out.println("User table created");
+			
+			PreparedStatement createGroupTable = conn.prepareStatement(
+					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20), PRIMARY KEY(username, IPAddress))");
+			createGroupTable.executeUpdate();
+			System.out.println("Usergroup table created");
+			
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -124,18 +130,6 @@ public class DBController {
 		return userPair;
 	}
 	
-	
-	public static void createGroupTable() throws Exception {
-		try {
-			Connection conn = getConnection();
-			PreparedStatement createGroupTable = conn.prepareStatement(
-					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20), PRIMARY KEY(username, IPAddress))");
-			createGroupTable.executeUpdate();
-			System.out.println("Table created");
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-	}
 	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
 		try {
 			Connection conn = getConnection();
