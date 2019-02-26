@@ -67,22 +67,21 @@ public class ChatApp extends JFrame {
 	JList<Group> onGoingGroups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
-	JButton createGroupBtn, sendMessageBtn, registerUserBtn;
+	JButton createGroupBtn, sendMessageBtn, registerUserBtn, loginBtn;
 	JTextField createGroup_txt, sendMessage_txt;
-	private JLabel lblUserName, imageLabel;
+	private JLabel lblUserName, imageLabel, lblGroups, lblOnlineUser, lblConversations;
+	private JScrollPane scrollPane, scrollPane_1, scrollPane_2;
 	
 	// Declare value variables
 	GroupController groupController;
+	DBController dbCon;
+	Login login;
 
 	// Users variables
 	UserList userList;
-	ArrayList<String> nameList;
-	ArrayList<Image> imageList;
 	DefaultListModel userModel;
+	ArrayList<String> online;
 	JList nameJList;
-	JList<Image> imageJList;
-	
-	ArrayList<String> online = new ArrayList<String>();
 	private Map<String, Image> imageMap;
 	
 	/**
@@ -111,47 +110,31 @@ public class ChatApp extends JFrame {
 	 */
 	public ChatApp() {
 		
-		// Implement controller into the client's application
-		groupController = new GroupController(this);
-		Login login = new Login(this);
-		userModel = new DefaultListModel();
+		/**
+		 * Initiate the shell of the user interface
+		 */
+		initUI();
 		
 		/**
-		 * Start of User Interface
+		 * Instantiate logic holders
 		 */
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 880, 467);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
-		
-		// Fetch users information and picture
+		userModel = new DefaultListModel();
+		online = new ArrayList<String>();
+		dbCon = new DBController();
 		try {
-			for (User user : groupController.getGlobalUserList()) {
-				online.add(user.getUserName());
-			}
-			DBController dbCon = new DBController();
-			userList = dbCon.getOnlineUsers(online);
-		} catch (Exception e1) {
-			e1.printStackTrace();
+			dbCon.getConnection();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+		groupController = new GroupController(this);
+		login = new Login(this);
 		
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(10, 120, 180, 250);
-		contentPane.add(scrollPane);
-		for (String name : userList.getNameList()) {
-			userModel.addElement(name);
-		}
-		nameJList = new JList(userModel);
-		imageMap = userList.getUserList();
-		nameJList.setCellRenderer(new listRenderer());
-		scrollPane.setViewportView(nameJList);
-
-		JScrollPane scrollPane_1 = new JScrollPane();
-		scrollPane_1.setBounds(220, 120, 180, 250);
-		contentPane.add(scrollPane_1);
-		onGoingGroups = new JList<Group>(groupController.convertGroupListToListModel());
+		
+		/**
+		 * Start of attaching logic into UI
+		 */
+		// Start of Group List
+		onGoingGroups.setModel(groupController.convertGroupListToListModel());
 		onGoingGroups.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("static-access")
 		    public void mouseClicked(MouseEvent evt) {
@@ -167,95 +150,49 @@ public class ChatApp extends JFrame {
 		        }
 		    }
 		});
-		scrollPane_1.setViewportView(onGoingGroups);
+		// End of Group List
 
-		JScrollPane scrollPane_2 = new JScrollPane();
-		scrollPane_2.setBounds(430, 120, 420, 250);
-		contentPane.add(scrollPane_2);
-		scrollPane_2.setViewportView(messageTextArea);
-
-		JLabel lblOnlineUser = new JLabel("Online Users");
-		lblOnlineUser.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblOnlineUser.setBounds(10, 90, 180, 25);
-		contentPane.add(lblOnlineUser);
-
-		JLabel lblGroups = new JLabel("Groups");
-		lblGroups.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblGroups.setBounds(220, 90, 180, 25);
-		contentPane.add(lblGroups);
-
-		JLabel lblConversations = new JLabel("Conversation");
-		lblConversations.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblConversations.setBounds(430, 90, 420, 25);
-		contentPane.add(lblConversations);
-		
-		lblUserName = new JLabel("");
-		lblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
+		// Set Current User Name at top right
 		lblUserName.setText(groupController.getCurrentUser().getUserName());
-		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(700, 10, 150, 25);
-		contentPane.add(lblUserName);
-		
-		imageLabel = new JLabel("");
-		imageLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		imageLabel.setBounds(750, 35, 100, 80);
-		contentPane.add(imageLabel);
 
-		registerUserBtn = new JButton("Register");
+		// On-click Listener for Register Button
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Register register = new Register(lblUserName, imageLabel);
+				Register register = new Register(lblUserName);
 				register.setVisible(true);
 				register.setTitle("Register");
 				register.setLocationRelativeTo(null);
 			}
 		});
-		registerUserBtn.setBounds(10, 10, 150, 25);
-		contentPane.add(registerUserBtn);
 
-		createGroupBtn = new JButton("Create Group");
+		// On-click Listener for Create Group Button
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
 				onGoingGroups.setModel(groupController.convertGroupListToListModel());
 			}
 		});
-		createGroupBtn.setBounds(10, 50, 150, 25);
-		contentPane.add(createGroupBtn);
 
-		createGroup_txt = new JTextField();
-		createGroup_txt.setColumns(10);
-		createGroup_txt.setBounds(170, 50, 170, 25);
-		contentPane.add(createGroup_txt);
-
-		sendMessageBtn = new JButton("Send Message");
+		// On-click Listener for Send Message Button
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
 			}
 		});
-		sendMessageBtn.setBounds(722, 380, 128, 25);
-		contentPane.add(sendMessageBtn);
 
-		sendMessage_txt = new JTextField();
-		sendMessage_txt.setColumns(10);
-		sendMessage_txt.setBounds(10, 380, 706, 25);
-		contentPane.add(sendMessage_txt);
-		
-		JButton btnLogin = new JButton("Login");
-		btnLogin.addActionListener(new ActionListener() {
+		// On-click Listener for Login Button
+		loginBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				login.setVisible(true);
 				login.setTitle("Login");
 				login.setLocationRelativeTo(null);
 			}
 		});
-		btnLogin.setBounds(170, 10, 150, 25);
-		contentPane.add(btnLogin);
-		/**
-		 * End of User Interface
-		 */
 		
+		/**
+		 * End of attaching logic into UI
+		 */
+
 		/**
 		 * Start of Enter Key Listeners
 		 */
@@ -281,80 +218,180 @@ public class ChatApp extends JFrame {
 		 * End of Enter Key Listeners
 		 */
 	}
+	
+	// Function to initiate the User interface shell
+	public void initUI() {
+		/**
+		 * Start of user interface
+		 */
+		// Content Pane
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 880, 467);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		// Scroll Pane for Online User List
+		scrollPane = new JScrollPane();
+		scrollPane.setBounds(10, 120, 180, 250);
+		contentPane.add(scrollPane);
+		nameJList = new JList(); // Set empty model shell
+		scrollPane.setViewportView(nameJList);
+		
+		// Scroll Pane 1 for Group List
+		scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(220, 120, 180, 250);
+		contentPane.add(scrollPane_1);
+		onGoingGroups = new JList<Group>(); // Set empty model shell
+		scrollPane_1.setViewportView(onGoingGroups);
+		
+		// Scroll Pane 2 for Message Text Area
+		scrollPane_2 = new JScrollPane();
+		scrollPane_2.setBounds(430, 120, 420, 250);
+		contentPane.add(scrollPane_2);
+		scrollPane_2.setViewportView(messageTextArea);
+		
+		// Label for Online User
+		lblOnlineUser = new JLabel("Online Users");
+		lblOnlineUser.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblOnlineUser.setBounds(10, 90, 180, 25);
+		contentPane.add(lblOnlineUser);
+		
+		// Label for Group
+		lblGroups = new JLabel("Groups");
+		lblGroups.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblGroups.setBounds(220, 90, 180, 25);
+		contentPane.add(lblGroups);
+		
+		// Label for Conversation
+		lblConversations = new JLabel("Conversation");
+		lblConversations.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblConversations.setBounds(430, 90, 420, 25);
+		contentPane.add(lblConversations);
+		
+		// Label for Username
+		lblUserName = new JLabel("");
+		lblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
+		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
+		lblUserName.setBounds(700, 10, 150, 25);
+		contentPane.add(lblUserName);
+		
+		// Button for Register
+		registerUserBtn = new JButton("Register");
+		registerUserBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				Register register = new Register(lblUserName);
+				register.setVisible(true);
+				register.setTitle("Register");
+				register.setLocationRelativeTo(null);
+			}
+		});
+		registerUserBtn.setBounds(10, 10, 150, 25);
+		contentPane.add(registerUserBtn);
+		
+		// Button for Create Group
+		createGroupBtn = new JButton("Create Group");
+		createGroupBtn.setBounds(10, 50, 150, 25);
+		contentPane.add(createGroupBtn);
+		
+		// Text Field for Create Group
+		createGroup_txt = new JTextField();
+		createGroup_txt.setColumns(10);
+		createGroup_txt.setBounds(170, 50, 170, 25);
+		contentPane.add(createGroup_txt);
+		
+		// Button for Send Message
+		sendMessageBtn = new JButton("Send Message");
+		sendMessageBtn.setBounds(722, 380, 128, 25);
+		contentPane.add(sendMessageBtn);
+		
+		// Text Field for Send Message
+		sendMessage_txt = new JTextField();
+		sendMessage_txt.setColumns(10);
+		sendMessage_txt.setBounds(10, 380, 706, 25);
+		contentPane.add(sendMessage_txt);
+		
+		// Button for Login
+		loginBtn = new JButton("Login");
+		loginBtn.setBounds(170, 10, 150, 25);
+		contentPane.add(loginBtn);
+	}
 
-		public class listRenderer extends DefaultListCellRenderer {
-
-        Font font = new Font("helvitica", Font.BOLD, 20);
-
-        @Override
-        public Component getListCellRendererComponent(
-                JList list, Object value, int index,
-                boolean isSelected, boolean cellHasFocus) {
-        	
-            JLabel label = (JLabel) super.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
-          
+	public class listRenderer extends DefaultListCellRenderer {
+	    Font font = new Font("helvitica", Font.BOLD, 20);
+	    @Override
+	    public Component getListCellRendererComponent(
+	            JList list, Object value, int index,
+	            boolean isSelected, boolean cellHasFocus) {  	
+	        JLabel label = (JLabel) super.getListCellRendererComponent(
+	                list, value, index, isSelected, cellHasFocus);     
 			Image myImg = imageMap.get((String) value).getScaledInstance(40, 40,Image.SCALE_SMOOTH);
 			ImageIcon image = new ImageIcon(myImg);
-            label.setIcon(image);
-            label.setHorizontalTextPosition(JLabel.RIGHT);
-            label.setFont(font);
-            return label;
-        }
+	        label.setIcon(image);
+	        label.setHorizontalTextPosition(JLabel.RIGHT);
+	        label.setFont(font);
+	        return label;
+	    }
     }
 		
-		public void convertUserListToListModel() {
-			try {
-				// Start with an empty list
-				online.clear();
-				userModel.clear();
-				// Loop through global user list to update list to query database
-				for (User user : groupController.getGlobalUserList()) {
-					online.add(user.getUserName());
-				}
-				DBController dbCon = new DBController();
-				userList = dbCon.getOnlineUsers(online);
-			} catch (Exception e1) {
-				e1.printStackTrace();
+	public void convertUserListToListModel() {
+		try {
+			// Start with an empty list
+			ArrayList<String> newOnlineList = new ArrayList<String>();
+			userModel = new DefaultListModel();
+			
+			// Loop through global user list to update list to query database
+			for (User user : groupController.getGlobalUserList()) {
+				newOnlineList.add(user.getUserName());
 			}
-			// Append fetched results into userModel
-			for (String name : userList.getNameList()) {
-				userModel.addElement(name);
-			}
-			nameJList.setModel(userModel);
-			imageMap = userList.getUserList();
-			nameJList.setCellRenderer(new listRenderer());
-		}
-
-		/**
-		 * START OF GETTERS AND SETTERS
-		 */
-		public JList<Group> getOnGoingGroups() {
-			return onGoingGroups;
-		}
-
-		public JList<User> getOnlineUsers() {
-			return onlineUsers;
-		}
-
-		public JLabel getLblUserName() {
-			return lblUserName;
-		}
-
-		public JLabel getImageLabel() {
-			return imageLabel;
-		}
-
-		public GroupController getGroupController() {
-			return groupController;
+			DBController dbCon1 = new DBController();
+			userList = dbCon1.getOnlineUsers(newOnlineList);
+		} catch (Exception e1) {
+			e1.printStackTrace();
 		}
 		
-		public static JTextArea getMessageTextArea() {
-			return messageTextArea;
+		// Append fetched results into userModel
+		System.out.println(userList.getNameList());
+		for (String name : userList.getNameList()) {
+			userModel.addElement(name);
 		}
-		/**
-		 * END OF GETTERS AND SETTERS
-		 */
+		
+		System.out.println("usermodel data "+userModel);
+		
+		// Set data into User Interface
+		nameJList.setModel(userModel);
+		imageMap = userList.getUserList();
+		nameJList.setCellRenderer(new listRenderer());
+	}
 
+	/**
+	 * START OF GETTERS AND SETTERS
+	 */
+	public JList<Group> getOnGoingGroups() {
+		return onGoingGroups;
+	}
 
+	public JList<User> getOnlineUsers() {
+		return onlineUsers;
+	}
+
+	public JLabel getLblUserName() {
+		return lblUserName;
+	}
+
+	public JLabel getImageLabel() {
+		return imageLabel;
+	}
+
+	public GroupController getGroupController() {
+		return groupController;
+	}
+	
+	public static JTextArea getMessageTextArea() {
+		return messageTextArea;
+	}
+	/**
+	 * END OF GETTERS AND SETTERS
+	 */
 }

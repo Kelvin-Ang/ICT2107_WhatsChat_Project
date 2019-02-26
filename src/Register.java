@@ -38,7 +38,7 @@ public class Register extends JFrame {
 	private JPasswordField txtPassword;
 	private JPasswordField txtCPassword;
 	
-	public Register(JLabel usernameText, JLabel imageLabel){
+	public Register(JLabel usernameText){
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		setBounds(100, 100, 450, 493);
@@ -161,7 +161,6 @@ public class Register extends JFrame {
 						Boolean insertSuccessful = dbCon.insertUser(username, password, image, IPAddress);
 						if (insertSuccessful) {
 							lblResult.setText("Account created.");
-							imageLabel.setIcon(finalImage);
 							usernameText.setText(username);
 							setVisible(false);
 							dispose();

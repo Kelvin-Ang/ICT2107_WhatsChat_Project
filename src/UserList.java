@@ -22,4 +22,13 @@ public class UserList {
 	public Map<String, Image> getUserList(){
 		return userList;
 	}
+	
+	public void clearAll() {
+		this.nameList.clear();
+		this.userList.clear();
+	}
+	
+	public boolean isEmpty() {
+		return nameList.isEmpty();
+	}
 }

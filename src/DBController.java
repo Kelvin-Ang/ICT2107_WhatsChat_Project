@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,9 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 
 public class DBController {
+	
+	private static Connection conn;
+	
 	public static Connection getConnection() throws Exception {
 		try {
 			String driver = "com.mysql.cj.jdbc.Driver";
@@ -24,7 +29,7 @@ public class DBController {
 			String password = "";
 			Class.forName(driver);
 
-			Connection conn = DriverManager.getConnection(url, username, password);
+			conn = DriverManager.getConnection(url, username, password);
 			System.out.println("Connected");
 			return conn;
 		} catch (Exception e) {
@@ -35,7 +40,6 @@ public class DBController {
 
 	public static void createTable() throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement createTable = conn.prepareStatement(
 					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, IPAddress varchar(20), PRIMARY KEY(id))");
 			createTable.executeUpdate();
@@ -45,7 +49,6 @@ public class DBController {
 		}
 	}
 	public static Boolean existingUsernameExist(String username) throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement checkExistingUser = conn
 				.prepareStatement("SELECT username from User WHERE username = '" + username + "'");
 		ResultSet result = checkExistingUser.executeQuery();
@@ -75,7 +78,6 @@ public class DBController {
 		}
 	}
 	public static User getUser(String username, String password) throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement insertUser = conn
 				.prepareStatement("SELECT * from User WHERE username = '" + username
 						+ "' AND password = '" + password + "'");
@@ -93,14 +95,12 @@ public class DBController {
 	}
 	
 	public static void updateUserIP(String username, String IPAddress) throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement updateUserIP = conn
 				.prepareStatement("UPDATE User SET IPAddress = '" + IPAddress + "' WHERE username = '" + username + "'");
 		updateUserIP.executeUpdate();
 	}
 	
 	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
-		Connection conn = getConnection();
 		UserList userPair;
 		ArrayList<String> nameList = new ArrayList<String>();
 		Map<String, Image> userList = new HashMap<>();
@@ -127,7 +127,6 @@ public class DBController {
 	
 	public static void createGroupTable() throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement createGroupTable = conn.prepareStatement(
 					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20), PRIMARY KEY(username, IPAddress))");
 			createGroupTable.executeUpdate();
@@ -138,7 +137,6 @@ public class DBController {
 	}
 	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement insertUserGroupPair = conn
 					.prepareStatement("INSERT INTO UserGroup WHERE username(username, IPAddress) VALUES ('" + username + "', '"
 							+ IPAddress + "', ?)");
@@ -149,7 +147,6 @@ public class DBController {
 	}
 	public static void deleteUserGroupPair(String username, String IPAddress) throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement deleteUserGroupPair = conn
 					.prepareStatement("DELETE FROM UserGroup WHERE username = '" + username + "' AND IPAddress = '" + IPAddress + "'");
 			deleteUserGroupPair.executeUpdate();
@@ -158,7 +155,6 @@ public class DBController {
 		}
 	}
 	public static List<String> retrieveUserGroup(String username) throws Exception {
-			Connection conn = getConnection();
 			PreparedStatement retrieveUserGroupPair = conn
 					.prepareStatement("SELECT IPAddress from UserGroup WHERE username = '" + username + "'");
 			ResultSet result = retrieveUserGroupPair.executeQuery();
@@ -170,5 +166,16 @@ public class DBController {
 				group.add(groupIP);
 			}
 		return group;
+	}
+	
+	/**
+	 * Function to close the SQL Connection
+	 * @param myConn
+	 * @throws SQLException
+	 */
+	public static void close(Connection myConn) throws SQLException {
+		if (myConn != null) {
+			myConn.close();
+		}
 	}
 }
