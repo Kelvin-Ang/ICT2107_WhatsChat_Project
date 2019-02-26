@@ -115,7 +115,7 @@ public class Register extends JFrame {
 		contentPane.add(lblNewLabel_2);
 		
 		lblResult = new JLabel("");
-		lblResult.setBounds(75, 305, 205, 14);
+		lblResult.setBounds(50, 305, 267, 14);
 		contentPane.add(lblResult);
 		
 		txtPassword = new JPasswordField();
@@ -142,10 +142,12 @@ public class Register extends JFrame {
 					cPassword += String.valueOf(cPasswordChar[i]);
 				}
 				
-				if (username.equals(""))
-					lblResult.setText("Please enter an username.");
+				if (!isUsernameValid(username))
+					System.out.println("Username is invalid.");
 				else if (password.equals("") && cPassword.equals(""))
 					lblResult.setText("Please enter a password.");
+				else if (username.length() > 8)
+					lblResult.setText("Username must not be more than 8 characters.");
 				else if (!password.equals(cPassword))
 					lblResult.setText("Passwords are not the same.");
 				else if (image == null)
@@ -185,5 +187,26 @@ public class Register extends JFrame {
 		Image newImg = img.getScaledInstance(label.getWidth(), label.getHeight(), Image.SCALE_SMOOTH);
 		ImageIcon image = new ImageIcon(newImg);
 		return image;
+	}
+	public Boolean isUsernameValid(String username) {
+		if (username.equals("")) {
+			lblResult.setText("Please enter an username.");
+			return false;
+		}
+		else if (username.length() > 8) {
+			lblResult.setText("Username must not be more than 8 characters.");
+			return false;
+		}
+		else if (username.substring(0, 1).matches(".*[0-9].*")) {
+			lblResult.setText("Username must not start with a number.");
+			return false;
+		}
+		for (int i = 0; i < username.length(); i++) {
+			if (username.substring(i, i + 1).matches(" ")) {
+				lblResult.setText("Username must not contain space.");
+				return false;
+			}
+		}
+		return true;
 	}
 }
