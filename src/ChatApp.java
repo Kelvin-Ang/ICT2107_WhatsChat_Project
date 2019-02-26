@@ -146,6 +146,15 @@ public class ChatApp extends JFrame {
 		nameJList = new JList(userModel);
 		imageMap = userList.getUserList();
 		nameJList.setCellRenderer(new listRenderer());
+		nameJList.addMouseListener(new MouseAdapter() {
+		    public void mouseClicked(MouseEvent evt) {
+		        JList list = (JList)evt.getSource();
+		        if (evt.getClickCount() == 1) {
+		            int index = list.locationToIndex(evt.getPoint());
+		            //System.out.println("clicked" + userModel[index]);
+		        } 
+		    }
+		});
 		scrollPane.setViewportView(nameJList);
 
 		JScrollPane scrollPane_1 = new JScrollPane();
@@ -355,6 +364,4 @@ public class ChatApp extends JFrame {
 		/**
 		 * END OF GETTERS AND SETTERS
 		 */
-
-
 }
