@@ -27,103 +27,52 @@ import javax.swing.table.TableRowSorter;
 public class GroupInformation extends JFrame {
 	
 	// Declare UI variables
+	private JLabel lblGroupName, lblGroupParticipants;
 	private JPanel contentPane;
 	private JTextField txtGroupName;
 	private JTable groupTable;
+	private JButton btnEditName, btnActiveGroup, btnLeaveGroup;
+	private JScrollPane scrollPaneGroup;
 	
-
 	// Declare value variables
-	private InetAddress adminGroup = null;
-	private MulticastSocket adminSocket = null;
-	private Group currentGroup;
-	public static GroupInformation obj = null;
 	private GroupController groupController;
-
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					UIManager.setLookAndFeel("com.jtattoo.plaf.acryl.AcrylLookAndFeel");
-					GroupInformation window = new GroupInformation();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	public void setGroupController(GroupController groupController) {
-		this.groupController = groupController;
-	}
-	
-	public Group getCurrentGroup() {
-		return currentGroup;
-	}
 
 	/**
 	 * Create the application.
 	 */
-	public GroupInformation() {
+	public GroupInformation(ChatApp chatApp) {
+		
+		// Get Controller
+		groupController = chatApp.getGroupController();
 		
 		/**
-		 * User Interface
+		 * Initiate the shell of the user interface
 		 */
-		setBounds(100, 100, 415, 400);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
-		
-		JLabel lblGroupName = new JLabel("Group Name");
-		lblGroupName.setBounds(10, 10, 75, 25);
-		contentPane.add(lblGroupName);
-		
-		txtGroupName = new JTextField();
-		txtGroupName.setText("Hi");
-		txtGroupName.setBounds(85, 10, 200, 25);
-		contentPane.add(txtGroupName);
-		txtGroupName.setColumns(10);
-		
-		JButton btnEditName = new JButton("Edit Name");
+		initUI();
+
+		/**
+		 * Start of attaching logic into UI
+		 */
+		// On-click Listener for Edit Name Button
 		btnEditName.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				DataSend.editGroupName()
 				System.out.println(txtGroupName.getText());
 			}
 		});
-		btnEditName.setBounds(290, 10, 100, 25);
-		contentPane.add(btnEditName);
 		
-		JLabel lblGroupParticipants = new JLabel("Group Participants");
-		lblGroupParticipants.setBounds(10, 40, 380, 25);
-		contentPane.add(lblGroupParticipants);
-		
-		JScrollPane scrollPaneGroup = new JScrollPane();
-		scrollPaneGroup.setBounds(10, 70, 380, 250);
-		contentPane.add(scrollPaneGroup);
-		
-		groupTable = new JTable();
-		groupTable.setModel(new DefaultTableModel(
-			new Object[][] {
-			},
-			new String[] {
-				"Status", "Participant Name"
+		// On-click Listener for Active Group Button
+		btnActiveGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Active Group");
 			}
-		));
-		groupTable.getColumnModel().getColumn(0).setPreferredWidth(30);
-		scrollPaneGroup.setViewportView(groupTable);
+		});
 		
-		JButton btnNewButton = new JButton("Set Active Group");
-		btnNewButton.setBounds(45, 335, 150, 25);
-		contentPane.add(btnNewButton);
-		
-		JButton btnNewButton_1 = new JButton("Leave Group");
-		btnNewButton_1.setBounds(200, 335, 150, 25);
-		contentPane.add(btnNewButton_1);
+		// On-click Listener for Leave Group Button
+		btnLeaveGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("Leave Group");
+			}
+		});
 	}
 	
 	/**
@@ -131,46 +80,105 @@ public class GroupInformation extends JFrame {
 	 * @param currentGroup
 	 */
 	public void setCurrentGroup(Group currentGroup) {
+		/**
+		 * Append Group Name into Change Group Name Text Field
+		 */
 		txtGroupName.setText(currentGroup.getGroupName());
+		
 		/**
 		 * Populate Data into JTable
 		 */
 		DefaultTableModel model = (DefaultTableModel) groupTable.getModel();
 		model.setRowCount(0);
 		List<User> userList = currentGroup.getUserList();
-		System.out.println("Total list of users"+currentGroup.getUserList().toString());
-		Object rowData[] = new Object[2];
+		System.out.println("Total list of users"+ currentGroup.getUserList().toString());
+		// Instantiate Object for three columns
+		Object rowData[] = new Object[3];
 		for (int i = 0; i < userList.size(); i++) {
 			if (userList.get(i).currentIP.equals(currentGroup.IPAddress)) {
 				rowData[0] = "Active";
 			} else {
 				rowData[0] = "Not Active";
 			}
-			rowData[1] = userList.get(i).userName;
+			// User is in Global Online User List => User is online
+			if (userList.contains(groupController.getGlobalUserList())) {
+				rowData[1] = "Online";
+			} else {
+				rowData[1] = "Offline";
+			}
+			rowData[2] = userList.get(i).userName;
 			model.addRow(rowData);
 		}
 		// Sort the table
 		TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<DefaultTableModel>(model);
 		groupTable.setRowSorter(sorter);
 	}
-
 	
+	/**
+	 * Function to initialise the User Interface
+	 */
+	public void initUI() {
+		/**
+		 * User Interface
+		 */
+		// Content Pane
+		setBounds(100, 100, 415, 400);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(contentPane);
+		contentPane.setLayout(null);
+		
+		// Label for Group Name
+		lblGroupName = new JLabel("Group Name");
+		lblGroupName.setBounds(10, 10, 75, 25);
+		contentPane.add(lblGroupName);
+		
+		// Text Field for Group Name
+		txtGroupName = new JTextField();
+		txtGroupName.setBounds(85, 10, 200, 25);
+		contentPane.add(txtGroupName);
+		txtGroupName.setColumns(10);
+		
+		// Button for Edit Name
+		btnEditName = new JButton("Edit Name");
+		btnEditName.setBounds(290, 10, 100, 25);
+		contentPane.add(btnEditName);
+		
+		// Label for Group Participants
+		lblGroupParticipants = new JLabel("Group Participants");
+		lblGroupParticipants.setBounds(10, 40, 380, 25);
+		contentPane.add(lblGroupParticipants);
+		
+		// Scroll Pane for Group Table
+		scrollPaneGroup = new JScrollPane();
+		scrollPaneGroup.setBounds(10, 70, 380, 250);
+		contentPane.add(scrollPaneGroup);
+		groupTable = new JTable();
+		groupTable.setModel(new DefaultTableModel(
+			new Object[][] {
+			},
+			new String[] {
+				"Status", "Online", "Participant Name"
+			}
+		));
+		groupTable.getColumnModel().getColumn(0).setPreferredWidth(30);
+		scrollPaneGroup.setViewportView(groupTable);
+		
+		// Button for Set Active Group
+		btnActiveGroup = new JButton("Set Active Group");
+		btnActiveGroup.setBounds(45, 335, 150, 25);
+		contentPane.add(btnActiveGroup);
+		
+		// Button for Leave Group
+		btnLeaveGroup = new JButton("Leave Group");
+		btnLeaveGroup.setBounds(200, 335, 150, 25);
+		contentPane.add(btnLeaveGroup);
+	}
+
 	/**
 	 * Function to close the Frame
 	 */
 	public void CloseFrame() {
 		super.dispose();
-	}
-	
-	/**
-	 * Implement Singleton pattern to ensure only one instance can be called
-	 * @return
-	 */
-	public static GroupInformation getObj() {
-		if (obj == null) {
-			obj = new GroupInformation();
-			obj.setLocationRelativeTo(null);
-		}
-		return obj;
 	}
 }

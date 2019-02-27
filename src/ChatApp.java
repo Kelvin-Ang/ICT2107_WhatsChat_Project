@@ -5,16 +5,10 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.ListModel;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 import java.awt.event.ActionListener;
@@ -70,6 +64,7 @@ public class ChatApp extends JFrame {
 	DBController dbCon;
 	Login login;
 	Register register;
+	GroupInformation groupInformation;
 	MouseAdapter mouseAdapter;
 
 	// Users variables
@@ -149,6 +144,7 @@ public class ChatApp extends JFrame {
 		groupController = new GroupController(this);
 		login = new Login(this);
 		register = new Register(this);
+		groupInformation = new GroupInformation(this);
 		
 
 		/**
@@ -163,12 +159,10 @@ public class ChatApp extends JFrame {
 				if (evt.getClickCount() == 2) {
 					// Double-click detected
 					int index = list.locationToIndex(evt.getPoint());
-					GroupInformation groupInformation = new GroupInformation();
-					groupInformation.getObj().setGroupController(groupController);
-					groupInformation.getObj().setCurrentGroup(groupController
+					groupInformation.setCurrentGroup(groupController
 							.convertIPAddressToGroup(groupController.getCurrentUser().getGroupList().get(index)));
-					groupInformation.getObj().setVisible(true);
-					groupInformation.getObj()
+					groupInformation.setVisible(true);
+					groupInformation
 							.setTitle(groupController
 									.convertIPAddressToGroup(groupController.getCurrentUser().getGroupList().get(index))
 									.getGroupName() + " Information");
