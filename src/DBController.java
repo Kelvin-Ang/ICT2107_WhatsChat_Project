@@ -134,8 +134,8 @@ public class DBController {
 		try {
 			Connection conn = getConnection();
 			PreparedStatement insertUserGroupPair = conn
-					.prepareStatement("INSERT INTO UserGroup WHERE username(username, IPAddress) VALUES ('" + username + "', '"
-							+ IPAddress + "', ?)");
+					.prepareStatement("INSERT INTO UserGroup (username, IPAddress) VALUES ('" + username + "', '"
+							+ IPAddress + "'");
 			insertUserGroupPair.executeUpdate();
 		} catch (Exception e) {
 			System.out.println(e);
