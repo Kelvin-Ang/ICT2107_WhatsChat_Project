@@ -361,6 +361,7 @@ public class GroupController {
 			// Add User into the group
 			groupToJoin.addUser(currentUser);
 			// Add group to userList in DB
+			System.out.println("calling DB");
 			dbCon.insertUserGroupPair(currentUser.userName,groupToJoin.getIPAddress());
 			// Adding the joined group into Global Group List held by all clients
 			if(!isInGroupList(globalGroupList,groupToJoin)) {

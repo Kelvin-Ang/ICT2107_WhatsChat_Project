@@ -131,10 +131,12 @@ public class DBController {
 	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
 		try {
 			Connection conn = getConnection();
+			System.out.println("db conneted execution of statement");
 			PreparedStatement insertUserGroupPair = conn
 					.prepareStatement("INSERT INTO UserGroup (username, IPAddress) VALUES ('" + username + "', '"
 							+ IPAddress + "')");
 			insertUserGroupPair.executeUpdate();
+			System.out.println("db execution of statement completed");
 		} catch (Exception e) {
 			System.out.println(e);
 		}
