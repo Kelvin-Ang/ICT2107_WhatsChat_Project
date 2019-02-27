@@ -165,4 +165,19 @@ public class DBController {
 			}
 		return group;
 	}
+	public static ArrayList<String> getDistinctUser() throws Exception {
+		Connection conn = getConnection();
+		PreparedStatement checkExistingUser = conn
+				.prepareStatement("SELECT DISTINCT username from User WHERE username");
+		ResultSet result = checkExistingUser.executeQuery();
+		
+		ArrayList<String> usernameList = new ArrayList<String>();
+		
+		while (result.next()) {
+			byte[] userByte = result.getBytes("username");
+			String username = new String(userByte);
+			usernameList.add(username);
+		}
+		return usernameList;
+	}
 }
