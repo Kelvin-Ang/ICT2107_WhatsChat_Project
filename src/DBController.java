@@ -16,7 +16,9 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 
 public class DBController {
-	public static Connection getConnection() throws Exception {
+	private static Connection conn = getConnection();
+	
+	private static Connection getConnection(){
 		try {
 			String driver = "com.mysql.cj.jdbc.Driver";
 			String url = "jdbc:mysql://localhost:3306/2107db?useTimezone=true&serverTimezone=GMT";
@@ -32,10 +34,8 @@ public class DBController {
 		}
 		return null;
 	}
-
 	public static void createTable() throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement createTable = conn.prepareStatement(
 					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, IPAddress varchar(20), PRIMARY KEY(id))");
 			createTable.executeUpdate();
@@ -51,7 +51,6 @@ public class DBController {
 		}
 	}
 	public static Boolean existingUsernameExist(String username) throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement checkExistingUser = conn
 				.prepareStatement("SELECT username from User WHERE username = '" + username + "'");
 		ResultSet result = checkExistingUser.executeQuery();
@@ -68,7 +67,6 @@ public class DBController {
 			else {
 				try {
 				FileInputStream is = new FileInputStream(new File(image));
-				Connection conn = getConnection();
 				PreparedStatement insertUser = conn
 						.prepareStatement("INSERT INTO User (username, password, profilePic, IPAddress) VALUES ('" + username + "', '"
 								+ password + "', ?, '" + IPAddress +"')");
@@ -81,7 +79,6 @@ public class DBController {
 		}
 	}
 	public static User getUser(String username, String password) throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement insertUser = conn
 				.prepareStatement("SELECT * from User WHERE username = '" + username
 						+ "' AND password = '" + password + "'");
@@ -99,14 +96,12 @@ public class DBController {
 	}
 	
 	public static void updateUserIP(String username, String IPAddress) throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement updateUserIP = conn
 				.prepareStatement("UPDATE User SET IPAddress = '" + IPAddress + "' WHERE username = '" + username + "'");
 		updateUserIP.executeUpdate();
 	}
 	
 	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
-		Connection conn = getConnection();
 		UserList userPair;
 		ArrayList<String> nameList = new ArrayList<String>();
 		Map<String, Image> userList = new HashMap<>();
@@ -132,7 +127,6 @@ public class DBController {
 	
 	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement insertUserGroupPair = conn
 					.prepareStatement("INSERT INTO UserGroup (username, IPAddress) VALUES ('" + username + "', '"
 							+ IPAddress + "'");
@@ -143,7 +137,6 @@ public class DBController {
 	}
 	public static void deleteUserGroupPair(String username, String IPAddress) throws Exception {
 		try {
-			Connection conn = getConnection();
 			PreparedStatement deleteUserGroupPair = conn
 					.prepareStatement("DELETE FROM UserGroup WHERE username = '" + username + "' AND IPAddress = '" + IPAddress + "'");
 			deleteUserGroupPair.executeUpdate();
@@ -152,7 +145,6 @@ public class DBController {
 		}
 	}
 	public static List<String> retrieveUserGroup(String username) throws Exception {
-			Connection conn = getConnection();
 			PreparedStatement retrieveUserGroupPair = conn
 					.prepareStatement("SELECT IPAddress from UserGroup WHERE username = '" + username + "'");
 			ResultSet result = retrieveUserGroupPair.executeQuery();
@@ -166,7 +158,6 @@ public class DBController {
 		return group;
 	}
 	public static ArrayList<String> getDistinctUser() throws Exception {
-		Connection conn = getConnection();
 		PreparedStatement checkExistingUser = conn
 				.prepareStatement("SELECT DISTINCT username from User WHERE username");
 		ResultSet result = checkExistingUser.executeQuery();
