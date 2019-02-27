@@ -138,6 +138,7 @@ public class GroupInformation extends JFrame {
 		DefaultTableModel model = (DefaultTableModel) groupTable.getModel();
 		model.setRowCount(0);
 		List<User> userList = currentGroup.getUserList();
+		System.out.println("Total list of users"+currentGroup.getUserList().toString());
 		Object rowData[] = new Object[2];
 		for (int i = 0; i < userList.size(); i++) {
 			if (userList.get(i).currentIP.equals(currentGroup.IPAddress)) {

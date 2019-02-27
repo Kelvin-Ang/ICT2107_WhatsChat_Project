@@ -60,7 +60,7 @@ public class ChatApp extends JFrame {
 	JList<Group> onGoingGroups;
 	JList<User> onlineUsers;
 	static JTextArea messageTextArea;
-	JButton createGroupBtn, sendMessageBtn, registerUserBtn, loginBtn;
+	JButton createGroupBtn, sendMessageBtn, registerUserBtn, loginBtn, logoutBtn;
 	JTextField createGroup_txt, sendMessage_txt;
 	private JLabel lblUserName, imageLabel, lblGroups, lblOnlineUser, lblConversations;
 	private JScrollPane scrollPane, scrollPane_1, scrollPane_2;
@@ -69,6 +69,7 @@ public class ChatApp extends JFrame {
 	GroupController groupController;
 	DBController dbCon;
 	Login login;
+	Register register;
 	MouseAdapter mouseAdapter;
 
 	// Users variables
@@ -118,13 +119,15 @@ public class ChatApp extends JFrame {
 				JList list = (JList) evt.getSource();
 				if (evt.getClickCount() == 2) {
 					int index = list.locationToIndex(evt.getPoint());
-					int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "+groupController.getGlobalUserList().get(index)+" to the group?",
-							"Group Invitation", JOptionPane.YES_NO_OPTION);
+					int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
+							+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
+							JOptionPane.YES_NO_OPTION);
 					// if option is yes
 					if (option == 0) {
 						// Join
-						System.out.println("current active group"+groupController.getCurrentActiveGroup().toString());
-						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),groupController.getCurrentActiveGroup());
+						System.out.println("current active group" + groupController.getCurrentActiveGroup().toString());
+						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
+								groupController.getCurrentActiveGroup());
 					}
 					// if option is no
 					else {
@@ -145,6 +148,8 @@ public class ChatApp extends JFrame {
 		}
 		groupController = new GroupController(this);
 		login = new Login(this);
+		register = new Register(this);
+		
 
 		/**
 		 * Start of attaching logic into UI
@@ -178,7 +183,7 @@ public class ChatApp extends JFrame {
 		// On-click Listener for Register Button
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Register register = new Register(lblUserName);
+				
 				register.setVisible(true);
 				register.setTitle("Register");
 				register.setLocationRelativeTo(null);
@@ -202,6 +207,15 @@ public class ChatApp extends JFrame {
 
 		// On-click Listener for Login Button
 		loginBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				login.setVisible(true);
+				login.setTitle("Login");
+				login.setLocationRelativeTo(null);
+			}
+		});
+
+		// On-click Listener for Logout Button
+		logoutBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				login.setVisible(true);
 				login.setTitle("Login");
@@ -246,14 +260,14 @@ public class ChatApp extends JFrame {
 		 * Start of user interface
 		 */
 		// Content Pane
-		addWindowListener(new WindowAdapter(){
+		addWindowListener(new WindowAdapter() {
 
-	           @Override
-	           public void windowClosing(WindowEvent et) {
-	               System.out.println("Window closing");
-	               System.out.println("Remember need to send data into db before closing");
-	           }
-	      });
+			@Override
+			public void windowClosing(WindowEvent et) {
+				System.out.println("Window closing");
+				System.out.println("Remember need to send data into db before closing");
+			}
+		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
 		contentPane = new JPanel();
@@ -310,7 +324,6 @@ public class ChatApp extends JFrame {
 		registerUserBtn = new JButton("Register");
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				Register register = new Register(lblUserName);
 				register.setVisible(true);
 				register.setTitle("Register");
 				register.setLocationRelativeTo(null);
@@ -345,6 +358,12 @@ public class ChatApp extends JFrame {
 		loginBtn = new JButton("Login");
 		loginBtn.setBounds(170, 10, 150, 25);
 		contentPane.add(loginBtn);
+
+		// Button for Login
+		logoutBtn = new JButton("Log out");
+		logoutBtn.setBounds(170, 10, 150, 25);
+		contentPane.add(logoutBtn);
+		logoutBtn.setVisible(false);
 	}
 
 	public class listRenderer extends DefaultListCellRenderer {
@@ -394,8 +413,6 @@ public class ChatApp extends JFrame {
 		nameJList.removeMouseListener(mouseAdapter);
 		nameJList.addMouseListener(mouseAdapter);
 	}
-	
-	
 
 	/**
 	 * START OF GETTERS AND SETTERS
