@@ -1,16 +1,9 @@
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
-
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -47,7 +40,6 @@ import java.net.MulticastSocket;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.swing.JScrollPane;
@@ -57,8 +49,6 @@ import javax.swing.JOptionPane;
 import java.awt.Font;
 import java.awt.Image;
 
-import javax.imageio.ImageIO;
-import javax.swing.Box; // import the HashMap class
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
