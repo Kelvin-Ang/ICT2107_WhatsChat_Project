@@ -126,12 +126,13 @@ public class ChatApp extends JFrame {
 				JList list = (JList) evt.getSource();
 				if (evt.getClickCount() == 2) {
 					int index = list.locationToIndex(evt.getPoint());
-					int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "+groupController.getGlobalUserList().get(index)+" the group?",
-							"Join Invitation", JOptionPane.YES_NO_OPTION);
+					int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "+groupController.getGlobalUserList().get(index)+" to the group?",
+							"Group Invitation", JOptionPane.YES_NO_OPTION);
 					// if option is yes
 					if (option == 0) {
 						// Join
-						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString());
+						System.out.println("current active group"+groupController.getCurrentActiveGroup().toString());
+						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),groupController.getCurrentActiveGroup());
 					}
 					// if option is no
 					else {

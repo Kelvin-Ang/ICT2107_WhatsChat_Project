@@ -30,6 +30,7 @@ public class GroupController {
 	private InetAddress multicastLobby = null;
 	private MulticastSocket multicastSocket = null;
 	private User currentUser;
+	private Group currentActiveGroup;
 	private List<User> globalUserList = new ArrayList<>();
 	private static List<Group> globalGroupList = new ArrayList<>();
 	Random rand = new Random();
@@ -123,14 +124,15 @@ public class GroupController {
 							break;
 							
 						case SEND_INVITE_TO_GROUP:
-							// All clients to send out their global user list
+							// Target user will display pop up to accept or decline
 							if (objectDataReceived.stringData.get(0).equals(currentUser.userName)) {
 								int option = JOptionPane.showConfirmDialog(null, "Do you want to join the group?",
 										"Join Invitation", JOptionPane.YES_NO_OPTION);
 								// if option is yes
 								if (option == 0) {
 									// Join
-
+									joinGroup(objectDataReceived.groupData.get(0));
+									chatApp.onGoingGroups.setModel(convertGroupListToListModel());
 								}
 								// if option is no
 								else {
@@ -223,15 +225,18 @@ public class GroupController {
 		}
 	}
 
-	public void sendInvite(String targetUser) {
+	public void sendInvite(String targetUser,Group grouptojoin) {
 		try {
 			List<String> stringData = new ArrayList<>();
+			List<Group> groupData = new ArrayList<>();
 			stringData.add(targetUser);
+			groupData.add(grouptojoin);
 			DataSend sendingData = new DataSend();
 			sendingData.setCommand(SEND_INVITE_TO_GROUP);
 			sendingData.setSender(currentUser.userName);
 			sendingData.setMulticastGroupIP(multicastLobby);
 			sendingData.setStringData(stringData);
+			sendingData.setGroupData(groupData);
 			byte[] buf = toByte(sendingData);
 			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
 			multicastSocket.send(dgpSend);
@@ -293,6 +298,8 @@ public class GroupController {
 			multicastSocket.joinGroup(multicastLobby);
 			currentUser = new User("Anonymous" + rand.nextInt(9999999), "230.1.1.1");
 
+			// Setting the current active group to Lobby when user group
+			currentActiveGroup = convertIPAddressToGroup("230.1.1.1");
 			newThread();
 			// Request group data from other clients
 			getGroupData();
@@ -350,9 +357,13 @@ public class GroupController {
 			// Add User into the group
 			groupToJoin.addUser(currentUser);
 			// Adding the joined group into Global Group List held by all clients
+			if(!isInGroupList(globalGroupList,groupToJoin)) {
 			globalGroupList.add(groupToJoin);
+			}
 			// Store the joined group into the current user's Group List
 			currentUser.groupList.add(groupToJoin.getIPAddress());
+			// Setting the current active group the use is inside
+			currentActiveGroup = convertIPAddressToGroup(currentUser.getCurrentIP());
 			// Send Datagram Packet for joining
 			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
 			newThread();
@@ -394,6 +405,7 @@ public class GroupController {
 				// If the user's group list has same IP as group
 				if (userGroupIPAddress.equals(group.getIPAddress())) {
 					// Group is user's active group
+					System.out.println("Current user group list"+ globalGroupList.toString());
 					if (group.getIPAddress().equals(currentUser.getCurrentIP())) {
 						// Append a <Active> tag at the back of the active group
 						Group tempGroup = new Group(group.IPAddress, group.getGroupName() + " <Active>");
@@ -603,6 +615,14 @@ public class GroupController {
 
 	public List<Group> getGlobalGroupList() {
 		return globalGroupList;
+	}
+	
+	public Group getCurrentActiveGroup() {
+		return currentActiveGroup;
+	}
+	
+	public void setCurrentActiveGroup(String ActiveIP) {
+		this.currentActiveGroup = convertIPAddressToGroup(ActiveIP);
 	}
 	/**
 	 * END OF GETTERS AND SETTERS

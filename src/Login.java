@@ -97,6 +97,7 @@ public class Login extends JFrame {
 						chatApp.getLblUserName().setText("Logged in as: " + user.getUserName());
 						groupController = chatApp.getGroupController();
 						groupController.setCurrentUser(user);
+						groupController.setCurrentActiveGroup(groupController.getCurrentUser().currentIP);
 						System.out.println("Users personal list" + user.getGroupList().toString());
 						// Update JList for Groups
 						chatApp.getOnGoingGroups().setModel(groupController.convertGroupListToListModel());
