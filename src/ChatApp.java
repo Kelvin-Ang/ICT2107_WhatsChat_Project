@@ -29,6 +29,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -254,6 +256,14 @@ public class ChatApp extends JFrame {
 		 * Start of user interface
 		 */
 		// Content Pane
+		addWindowListener(new WindowAdapter(){
+
+	           @Override
+	           public void windowClosing(WindowEvent et) {
+	               System.out.println("Window closing");
+	               System.out.println("Remember need to send data into db before closing");
+	           }
+	      });
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
 		contentPane = new JPanel();

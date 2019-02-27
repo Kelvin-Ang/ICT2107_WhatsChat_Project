@@ -35,6 +35,7 @@ public class GroupController {
 	private static List<Group> globalGroupList = new ArrayList<>();
 	Random rand = new Random();
 	private ChatApp chatApp;
+	DBController dbCon;
 
 	// Declare constants for commands
 	public static final String REQUEST_FOR_GROUPS = "RequestGroups";
@@ -51,8 +52,11 @@ public class GroupController {
 	 */
 	public GroupController(ChatApp chatApp) {
 		this.chatApp = chatApp;
+		dbCon = new DBController();
 		messageTextArea = chatApp.getMessageTextArea();
 		joinLobby();
+		chatApp.createGroupBtn.setVisible(false);
+		chatApp.createGroup_txt.setVisible(false);
 	}
 
 	/* TO-DO Login function to restore state by changing Controller's attributes */
@@ -356,6 +360,8 @@ public class GroupController {
 			currentUser.setCurrentIP(groupToJoin.IPAddress);
 			// Add User into the group
 			groupToJoin.addUser(currentUser);
+			// Add group to userList in DB
+			dbCon.insertUserGroupPair(currentUser.userName,groupToJoin.getIPAddress());
 			// Adding the joined group into Global Group List held by all clients
 			if(!isInGroupList(globalGroupList,groupToJoin)) {
 			globalGroupList.add(groupToJoin);
@@ -369,8 +375,9 @@ public class GroupController {
 			newThread();
 			// Broadcast updates of groupList to all clients
 			sendGroupData(globalGroupList);
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

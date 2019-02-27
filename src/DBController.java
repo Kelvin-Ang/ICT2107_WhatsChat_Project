@@ -143,11 +143,14 @@ public class DBController {
 	}
 
 	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
+		System.out.println("Sending data into db");
 		try {
+			System.out.println("Sending data into db");
 			PreparedStatement insertUserGroupPair = conn
 					.prepareStatement("INSERT INTO UserGroup WHERE username(username, IPAddress) VALUES ('" + username + "', '"
-							+ IPAddress + "', ?)");
+							+ IPAddress + "')");
 			insertUserGroupPair.executeUpdate();
+			
 		} catch (Exception e) {
 			System.out.println(e);
 		}

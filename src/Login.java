@@ -111,6 +111,12 @@ public class Login extends JFrame {
 //						chatApp.getOnlineUsers().setModel(groupController.convertUserListToListModel());
 						setVisible(false);
 						dispose();
+						//chatApp.loginBtn.setEnabled(false);
+						chatApp.loginBtn.setVisible(false);
+						chatApp.registerUserBtn.setVisible(false);
+						chatApp.createGroupBtn.setVisible(true);
+						chatApp.createGroup_txt.setVisible(true);
+						
 					}
 					else{
 						lblResult.setText("User is not found.");
