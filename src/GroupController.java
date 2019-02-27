@@ -36,6 +36,7 @@ public class GroupController {
 	Random rand = new Random();
 	private ChatApp chatApp;
 	DBController dbCon;
+	static int hostPingCount;
 
 	// Declare constants for commands
 	public static final String REQUEST_FOR_GROUPS = "RequestGroups";
@@ -44,6 +45,9 @@ public class GroupController {
 	public static final String BROADCAST_USER_LIST = "BroadcastUsers";
 	public static final String SEND_MESSAGE_TO_GROUP = "SendMessage";
 	public static final String SEND_INVITE_TO_GROUP = "SendInvite";
+	public static final String HOST_INCREASE_PING = "HostIncreasePing";
+	public static final String HOST_LEFT_PING = "HostLeftPing";
+	public static final String REQUEST_NUMBER_OF_HOST = "RequestNumberOfHost";
 
 	/**
 	 * Constructor for Non-Login
@@ -52,11 +56,13 @@ public class GroupController {
 	 */
 	public GroupController(ChatApp chatApp) {
 		this.chatApp = chatApp;
+		hostPingCount = 1;
 		dbCon = new DBController();
 		messageTextArea = chatApp.getMessageTextArea();
 		joinLobby();
 		chatApp.createGroupBtn.setVisible(false);
 		chatApp.createGroup_txt.setVisible(false);
+		requestNumberOfHost();
 	}
 
 	/* TO-DO Login function to restore state by changing Controller's attributes */
@@ -126,7 +132,7 @@ public class GroupController {
 								sendUserData(globalUserList);
 							}
 							break;
-							
+
 						case SEND_INVITE_TO_GROUP:
 							// Target user will display pop up to accept or decline
 							if (objectDataReceived.stringData.get(0).equals(currentUser.userName)) {
@@ -143,6 +149,32 @@ public class GroupController {
 									// Do nothing / don't join
 
 								}
+							}
+							break;
+						case HOST_INCREASE_PING:
+							// All clients to send out their global user list
+							if (currentUser.getUserName().equals(objectDataReceived.sender)) {
+							hostPingCount += 1;
+							System.out.println("Number of host left " + hostPingCount);
+							}
+							break;
+
+						case REQUEST_NUMBER_OF_HOST:
+							// All clients to send out their global user list
+							if (!currentUser.getUserName().equals(objectDataReceived.sender)) {
+								hostPingCount = objectDataReceived.getNumberOfHost();
+								increaseHostPingCount();
+								System.out.println("Number of host left " + hostPingCount);
+							}
+							break;
+
+						case HOST_LEFT_PING:
+							// All clients to send out their global user list
+							hostPingCount -= 1;
+							if (hostPingCount > 1) {
+								System.out.println("you are not the last one  " + hostPingCount);
+							} else {
+								System.out.println("you are the last one  " + hostPingCount);
 							}
 							break;
 						default:
@@ -229,7 +261,7 @@ public class GroupController {
 		}
 	}
 
-	public void sendInvite(String targetUser,Group grouptojoin) {
+	public void sendInvite(String targetUser, Group grouptojoin) {
 		try {
 			List<String> stringData = new ArrayList<>();
 			List<Group> groupData = new ArrayList<>();
@@ -362,10 +394,10 @@ public class GroupController {
 			groupToJoin.addUser(currentUser);
 			// Add group to userList in DB
 			System.out.println("calling DB");
-			dbCon.insertUserGroupPair(currentUser.userName,groupToJoin.getIPAddress());
+			dbCon.insertUserGroupPair(currentUser.userName, groupToJoin.getIPAddress());
 			// Adding the joined group into Global Group List held by all clients
-			if(!isInGroupList(globalGroupList,groupToJoin)) {
-			globalGroupList.add(groupToJoin);
+			if (!isInGroupList(globalGroupList, groupToJoin)) {
+				globalGroupList.add(groupToJoin);
 			}
 			// Store the joined group into the current user's Group List
 			currentUser.groupList.add(groupToJoin.getIPAddress());
@@ -413,7 +445,7 @@ public class GroupController {
 				// If the user's group list has same IP as group
 				if (userGroupIPAddress.equals(group.getIPAddress())) {
 					// Group is user's active group
-					System.out.println("Current user group list"+ globalGroupList.toString());
+					System.out.println("Current user group list" + globalGroupList.toString());
 					if (group.getIPAddress().equals(currentUser.getCurrentIP())) {
 						// Append a <Active> tag at the back of the active group
 						Group tempGroup = new Group(group.IPAddress, group.getGroupName() + " <Active>");
@@ -606,6 +638,50 @@ public class GroupController {
 		return false;
 	}
 
+	public void hostLeftPing() {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(HOST_LEFT_PING);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void increaseHostPingCount() {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(HOST_INCREASE_PING);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void requestNumberOfHost() {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(HOST_INCREASE_PING);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+
+			sendingData.setNumberOfHost(hostPingCount);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
 	/**
 	 * START OF GETTERS AND SETTERS
 	 */
@@ -624,11 +700,11 @@ public class GroupController {
 	public List<Group> getGlobalGroupList() {
 		return globalGroupList;
 	}
-	
+
 	public Group getCurrentActiveGroup() {
 		return currentActiveGroup;
 	}
-	
+
 	public void setCurrentActiveGroup(String ActiveIP) {
 		this.currentActiveGroup = convertIPAddressToGroup(ActiveIP);
 	}
