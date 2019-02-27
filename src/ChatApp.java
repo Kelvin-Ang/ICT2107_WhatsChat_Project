@@ -127,7 +127,7 @@ public class ChatApp extends JFrame {
 						// Join
 						System.out.println("current active group" + groupController.getCurrentActiveGroup().toString());
 						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
-								groupController.getCurrentActiveGroup());
+						groupController.getCurrentActiveGroup());
 					}
 					// if option is no
 					else {
