@@ -258,6 +258,7 @@ public class ChatApp extends JFrame {
 
 			@Override
 			public void windowClosing(WindowEvent et) {
+				groupController.hostLeftPing();
 				System.out.println("Window closing");
 				System.out.println("Remember need to send data into db before closing");
 			}
