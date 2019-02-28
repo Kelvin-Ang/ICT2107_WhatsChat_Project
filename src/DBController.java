@@ -1,5 +1,3 @@
-
-
 import java.awt.Image;
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,9 +14,13 @@ import java.util.Map;
 import javax.swing.ImageIcon;
 
 public class DBController {
-	private static Connection conn = getConnection();
 	
-	private static Connection getConnection(){
+	/**
+	 * Function to connect to MySQL Database
+	 * @return
+	 * @throws Exception
+	 */
+	public static Connection getConnection() throws Exception {
 		try {
 			String driver = "com.mysql.cj.jdbc.Driver";
 			String url = "jdbc:mysql://localhost:3306/2107db?useTimezone=true&serverTimezone=GMT";
@@ -34,15 +36,21 @@ public class DBController {
 		}
 		return null;
 	}
+
+	/**
+	 * Function to execute initial create table in MySQL
+	 * @throws Exception
+	 */
 	public static void createTable() throws Exception {
 		try {
+			Connection conn = getConnection();
 			PreparedStatement createTable = conn.prepareStatement(
 					"CREATE TABLE IF NOT EXISTS User(id int NOT NULL AUTO_INCREMENT, username varchar(20), password varchar(20), profilePic MEDIUMBLOB, IPAddress varchar(20), PRIMARY KEY(id))");
 			createTable.executeUpdate();
 			System.out.println("User table created");
 			
 			PreparedStatement createGroupTable = conn.prepareStatement(
-					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20), PRIMARY KEY(username, IPAddress))");
+					"CREATE TABLE IF NOT EXISTS UserGroup(username varchar(20), IPAddress varchar(20), groupName varchar(50), PRIMARY KEY(username, IPAddress))");
 			createGroupTable.executeUpdate();
 			System.out.println("Usergroup table created");
 			
@@ -50,7 +58,15 @@ public class DBController {
 			System.out.println(e);
 		}
 	}
+	
+	/**
+	 * Function to check if user exist in Database
+	 * @param username
+	 * @return
+	 * @throws Exception
+	 */
 	public static Boolean existingUsernameExist(String username) throws Exception {
+		Connection conn = getConnection();
 		PreparedStatement checkExistingUser = conn
 				.prepareStatement("SELECT username from User WHERE username = '" + username + "'");
 		ResultSet result = checkExistingUser.executeQuery();
@@ -60,11 +76,22 @@ public class DBController {
 		}
 		return false;
 	}
+	
+	/**
+	 * Function to insert user into Database
+	 * @param username
+	 * @param password
+	 * @param image
+	 * @param IPAddress
+	 * @return
+	 * @throws Exception
+	 */
 	public static Boolean insertUser(String username, String password, String image, String IPAddress) throws Exception {
-			if (existingUsernameExist(username)) {
-				return false;
-			}
-			else {
+		Connection conn = getConnection();
+		if (existingUsernameExist(username)) {
+			return false;
+		}
+		else {
 				try {
 				FileInputStream is = new FileInputStream(new File(image));
 				PreparedStatement insertUser = conn
@@ -78,7 +105,16 @@ public class DBController {
 			return true;
 		}
 	}
+	
+	/**
+	 * Function to get an user from the Database and return a User object
+	 * @param username
+	 * @param password
+	 * @return User object
+	 * @throws Exception
+	 */
 	public static User getUser(String username, String password) throws Exception {
+		Connection conn = getConnection();
 		PreparedStatement insertUser = conn
 				.prepareStatement("SELECT * from User WHERE username = '" + username
 						+ "' AND password = '" + password + "'");
@@ -96,12 +132,14 @@ public class DBController {
 	}
 	
 	public static void updateUserIP(String username, String IPAddress) throws Exception {
+		Connection conn = getConnection();
 		PreparedStatement updateUserIP = conn
 				.prepareStatement("UPDATE User SET IPAddress = '" + IPAddress + "' WHERE username = '" + username + "'");
 		updateUserIP.executeUpdate();
 	}
 	
 	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
+		Connection conn = getConnection();
 		UserList userPair;
 		ArrayList<String> nameList = new ArrayList<String>();
 		Map<String, Image> userList = new HashMap<>();
@@ -125,17 +163,20 @@ public class DBController {
 		return userPair;
 	}
 	
-	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
+	public static void saveStateToDatabase(String username, String IPAddress, String groupName) throws Exception {
+		Connection conn = getConnection();
 		try {
 			PreparedStatement insertUserGroupPair = conn
-					.prepareStatement("INSERT INTO UserGroup (username, IPAddress) VALUES ('" + username + "', '"
-							+ IPAddress + "'");
+					.prepareStatement("INSERT INTO UserGroup (username, IPAddress, groupName) VALUES ('" + username + "', '"
+							+ IPAddress + "', '" + groupName + "')");
 			insertUserGroupPair.executeUpdate();
+			System.out.println("db execution of statement completed");
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 	}
 	public static void deleteUserGroupPair(String username, String IPAddress) throws Exception {
+		Connection conn = getConnection();
 		try {
 			PreparedStatement deleteUserGroupPair = conn
 					.prepareStatement("DELETE FROM UserGroup WHERE username = '" + username + "' AND IPAddress = '" + IPAddress + "'");
@@ -144,7 +185,9 @@ public class DBController {
 			System.out.println(e);
 		}
 	}
+	
 	public static List<String> retrieveUserGroup(String username) throws Exception {
+		Connection conn = getConnection();
 			PreparedStatement retrieveUserGroupPair = conn
 					.prepareStatement("SELECT IPAddress from UserGroup WHERE username = '" + username + "'");
 			ResultSet result = retrieveUserGroupPair.executeQuery();
@@ -157,18 +200,47 @@ public class DBController {
 			}
 		return group;
 	}
+	
+	/**
+	 * Get all unique name in UserGroup Table
+	 * @return
+	 * @throws Exception
+	 */
 	public static ArrayList<String> getDistinctUser() throws Exception {
+		Connection conn = getConnection();
 		PreparedStatement checkExistingUser = conn
-				.prepareStatement("SELECT DISTINCT username from User WHERE username");
+				.prepareStatement("SELECT DISTINCT username from UserGroup");
 		ResultSet result = checkExistingUser.executeQuery();
-		
+
 		ArrayList<String> usernameList = new ArrayList<String>();
-		
+
 		while (result.next()) {
-			byte[] userByte = result.getBytes("username");
-			String username = new String(userByte);
+			String username = result.getString("username");
 			usernameList.add(username);
 		}
 		return usernameList;
+	}
+	
+	/**
+	 * Get all unique groupName in UserGroup Table
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<Group> getDistinctGroup() throws Exception {
+		Connection conn = getConnection();
+		PreparedStatement checkExistingUser = conn
+				.prepareStatement("SELECT DISTINCT IPAddress, groupName from UserGroup");
+		ResultSet result = checkExistingUser.executeQuery();
+
+		List<Group> globalGroupList = new ArrayList<Group>();
+		Group tempGroup = null;
+		
+		while (result.next()) {
+			String IPAddress = result.getString("IPAddress");
+			String groupName = result.getString("groupName");
+			tempGroup = new Group(IPAddress, groupName);
+			globalGroupList.add(tempGroup);
+		}
+		return globalGroupList;
 	}
 }

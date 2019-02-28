@@ -11,6 +11,15 @@ public class DataSend implements Serializable {
 	public List<String> stringData = new ArrayList<>();
 	public List<User> userData = new ArrayList<>();
 	public List<Group> groupData = new ArrayList<>();
+	public int numberOfHost;
+
+	public int getNumberOfHost() {
+		return numberOfHost;
+	}
+
+	public void setNumberOfHost(int numberOfHost) {
+		this.numberOfHost = numberOfHost;
+	}
 
 	public void setCommand(String command) {
 		this.command = command;
