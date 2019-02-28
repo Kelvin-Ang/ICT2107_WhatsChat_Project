@@ -56,8 +56,7 @@ public class GroupController {
 		dbCon = new DBController();
 		messageTextArea = chatApp.getMessageTextArea();
 		joinLobby();
-		chatApp.createGroupBtn.setVisible(false);
-		chatApp.createGroup_txt.setVisible(false);
+		
 		// Broadcast the incoming client
 		notifyIncomingHostData();
 	}
@@ -754,7 +753,13 @@ public class GroupController {
 			e.printStackTrace();
 		}
 	}
-
+	public void resetUser(Group group) {
+		Random rand = new Random();
+		User user = new User("Anonymous" + rand.nextInt(9999999), "230.1.1.1" );
+		joinGroup(group);
+		setCurrentUser(user);
+		chatApp.getLblUserName().setText(getCurrentUser().getUserName());
+	}
 	/**
 	 * START OF GETTERS AND SETTERS
 	 */
