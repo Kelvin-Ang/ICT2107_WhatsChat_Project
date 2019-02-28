@@ -108,13 +108,20 @@ public class Login extends JFrame {
 						System.out.println("UPDATED USER LIST" + groupController.getGlobalUserList());
 //						chatApp.getOnlineUsers().setModel(groupController.convertUserListToListModel());
 						setVisible(false);
-						dispose();
-						// chatApp.loginBtn.setEnabled(false);
+						
+						chatApp.loginBtn.setEnabled(false);
 						chatApp.loginBtn.setVisible(false);
+						
 						chatApp.logoutBtn.setVisible(true);
+						chatApp.logoutBtn.setEnabled(true);
 						chatApp.registerUserBtn.setEnabled(false);
-						chatApp.createGroupBtn.setVisible(true);
-						chatApp.createGroup_txt.setVisible(true);
+						chatApp.createGroupBtn.setEnabled(true);
+						chatApp.createGroup_txt.setEnabled(true);
+						
+						txtUsername.setText("");
+						txtPassword.setText("");
+						
+						dispose();
 
 					} else {
 						lblResult.setText("User is not found.");
