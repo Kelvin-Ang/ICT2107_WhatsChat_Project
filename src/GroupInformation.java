@@ -106,10 +106,15 @@ public class GroupInformation extends JFrame {
 				rowData[0] = "Not Active";
 			}
 			// User is in Global Online User List => User is online
-			if (userList.contains(groupController.getGlobalUserList())) {
-				rowData[1] = "Online";
-			} else {
-				rowData[1] = "Offline";
+			System.out.println("Total list of users for global"+ groupController.getGlobalUserList().toString());
+			for (User globalOnlineUsers : groupController.getGlobalUserList()) {
+				System.out.println("Comparing "+ userList.get(i).getUserName() + " AND " + globalOnlineUsers.getUserName());
+				if (userList.get(i).getUserName().equals(globalOnlineUsers.getUserName())) {
+					rowData[1] = "Online";
+					break;
+				} else {
+					rowData[1] = "Offline";
+				}
 			}
 			rowData[2] = userList.get(i).userName;
 			model.addRow(rowData);

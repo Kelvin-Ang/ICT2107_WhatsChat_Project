@@ -16,6 +16,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
@@ -52,6 +53,7 @@ public class ChatApp extends JFrame {
 	Register register;
 	GroupInformation groupInformation;
 	MouseAdapter mouseAdapter;
+	MouseListener[] mouseArray;
 
 	// Users variables
 	UserList userList;
@@ -94,32 +96,6 @@ public class ChatApp extends JFrame {
 		/**
 		 * Instantiate logic holders
 		 */
-		// On-click listener to Group Invite by clicking user
-		mouseAdapter = new MouseAdapter() {
-			@SuppressWarnings("static-access")
-			public void mouseClicked(MouseEvent evt) {
-				JList list = (JList) evt.getSource();
-				if (evt.getClickCount() == 2) {
-					int index = list.locationToIndex(evt.getPoint());
-					int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
-							+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
-							JOptionPane.YES_NO_OPTION);
-					// if option is yes
-					if (option == 0) {
-						// Join
-						System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
-						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
-						groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
-					}
-					// if option is no
-					else {
-						// Do nothing / don't join
-
-					}
-				}
-
-			}
-		};
 		userModel = new DefaultListModel();
 		online = new ArrayList<String>();
 		dbCon = new DBController();
@@ -207,14 +183,36 @@ public class ChatApp extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent et) {
+				System.out.println("Windows closing");
+				// Going offline, remove from Global User List
+				for (User findUserToDelete : groupController.getGlobalUserList()) {
+					if (findUserToDelete.getUserName().equals(groupController.getCurrentUser().getUserName())) {
+						groupController.getGlobalUserList().remove(findUserToDelete);
+						break;
+					}
+				}
+				System.out.println("Final user list" + groupController.getGlobalUserList());
+				// Broadcast the change that user has went offline
+				groupController.sendUserData(groupController.getGlobalUserList());
+				// Broadcast the decrement in host
 				groupController.notifyOutgoingHostData();
+				// Detected that it is the last client, save state into Database
 				if (groupController.getHostPingCount() == 1) {
-					// Insert into Database
-					System.out.println("Window closing" + groupController.getHostPingCount());
-					System.out.println("Remember need to send data into db before closing");
-				} else {
-					System.out.println("Window closing" + groupController.getHostPingCount());
-					System.out.print("Still got people la");
+					// Insert every group from Global Group List into Database
+					for (Group groupToSave : groupController.getGlobalGroupList()) {
+						if (!groupToSave.getIPAddress().equals("230.1.1.1")) {
+							// For every group that is not Lobby, get every user
+							for (User userToSave : groupToSave.getUserList()) {
+								try {
+									dbCon.saveStateToDatabase(userToSave.getUserName(), groupToSave.getIPAddress(), groupToSave.getGroupName());
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
+						}
+					}
+					
 				}
 			}
 		});
@@ -347,52 +345,72 @@ public class ChatApp extends JFrame {
 		logoutBtn.setVisible(false);
 	}
 
-	public class listRenderer extends DefaultListCellRenderer {
-		Font font = new Font("helvitica", Font.PLAIN, 16);
-
-		@Override
-		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
-				boolean cellHasFocus) {
-			JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-			Image myImg = imageMap.get((String) value).getScaledInstance(40, 40, Image.SCALE_SMOOTH);
-			ImageIcon image = new ImageIcon(myImg);
-			label.setIcon(image);
-			label.setHorizontalTextPosition(JLabel.RIGHT);
-			label.setFont(font);
-			return label;
-		}
-	}
-
 	public void convertUserListToListModel() {
 		try {
 			// Start with an empty list
 			ArrayList<String> newOnlineList = new ArrayList<String>();
-			userModel = new DefaultListModel();
+			DefaultListModel newUserModel = new DefaultListModel();
+			UserList newUserList = new UserList();
 
+			System.out.println("Global User to convert list" + groupController.getGlobalUserList().toString());
 			// Loop through global user list to update list to query database
 			for (User user : groupController.getGlobalUserList()) {
 				newOnlineList.add(user.getUserName());
 			}
-			DBController dbCon1 = new DBController();
-			userList = dbCon1.getOnlineUsers(newOnlineList);
+			
+			newUserList = dbCon.getOnlineUsers(newOnlineList);
+			
+			// Append fetched results into userModel
+			System.out.println("Getting name list " + newUserList.getNameList());
+			for (String name : newUserList.getNameList()) {
+				newUserModel.addElement(name);
+			}
+
+			System.out.println("usermodel data " + newUserModel.toString());
+
+			// Set data into User Interface
+			nameJList.setModel(newUserModel);
+			imageMap = newUserList.getUserList();
+			mouseArray = nameJList.getMouseListeners();
+			System.out.println("Mouse Listeners before add " + mouseArray.length);
+			if (mouseArray.length == 2) {
+				nameJList.addMouseListener(		
+						// On-click listener to Group Invite by clicking user
+						mouseAdapter = new MouseAdapter() {
+							@SuppressWarnings("static-access")
+							public void mouseClicked(MouseEvent evt) {
+								JList list = (JList) evt.getSource();
+								if (evt.getClickCount() == 2) {
+									int index = list.locationToIndex(evt.getPoint());
+									int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
+											+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
+											JOptionPane.YES_NO_OPTION);
+									// if option is yes
+									if (option == 0) {
+										// Join
+										System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
+										groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
+										groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
+									}
+									// if option is no
+									else {
+										// Do nothing / don't join
+
+									}
+								}
+
+							}
+						});
+			}
+			System.out.println("Mouse Listeners " + mouseArray.length);
+			while (imageMap == null) {
+				// Lock
+				System.out.println("Image WAITING...");
+			}
+			nameJList.setCellRenderer(new listRenderer());
 		} catch (Exception e1) {
 			e1.printStackTrace();
 		}
-
-		// Append fetched results into userModel
-		System.out.println(userList.getNameList());
-		for (String name : userList.getNameList()) {
-			userModel.addElement(name);
-		}
-
-		System.out.println("usermodel data " + userModel);
-
-		// Set data into User Interface
-		nameJList.setModel(userModel);
-		imageMap = userList.getUserList();
-		nameJList.setCellRenderer(new listRenderer());
-		nameJList.removeMouseListener(mouseAdapter);
-		nameJList.addMouseListener(mouseAdapter);
 	}
 	
 	/**
@@ -421,6 +439,22 @@ public class ChatApp extends JFrame {
 		}
 		System.out.println("Current user group list" + currentGroupList);
 		return currentGroupList;
+	}
+	
+	public class listRenderer extends DefaultListCellRenderer {
+		Font font = new Font("helvitica", Font.PLAIN, 16);
+
+		@Override
+		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
+				boolean cellHasFocus) {
+			JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+			Image myImg = imageMap.get((String) value).getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+			ImageIcon image = new ImageIcon(myImg);
+			label.setIcon(image);
+			label.setHorizontalTextPosition(JLabel.RIGHT);
+			label.setFont(font);
+			return label;
+		}
 	}
 
 	/**
