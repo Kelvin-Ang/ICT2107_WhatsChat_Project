@@ -23,6 +23,7 @@ public class Login extends JFrame {
 	User user;
 	private JPasswordField txtPassword;
 	private GroupController groupController;
+	private DBController dbCon;
 
 	/**
 	 * Create the frame.
@@ -31,6 +32,7 @@ public class Login extends JFrame {
 
 		// Get Controller
 		groupController = chatApp.getGroupController();
+		dbCon = chatApp.getDbCon();
 
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -76,7 +78,6 @@ public class Login extends JFrame {
 					password += String.valueOf(passwordChar[i]);
 				}
 
-				DBController dbCon = new DBController();
 				if (txtUsername.getText().equals("")) {
 					lblResult.setText("Please enter a username.");
 				} else if (txtPassword.getText().equals("")) {

@@ -5,16 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
@@ -36,18 +33,18 @@ public class GroupController {
 	Random rand = new Random();
 	private ChatApp chatApp;
 	DBController dbCon;
-	static int hostPingCount;
+	private int hostPingCount;
 
 	// Declare constants for commands
 	public static final String REQUEST_FOR_GROUPS = "RequestGroups";
 	public static final String BROADCAST_GROUP_LIST = "BroadcastGroups";
 	public static final String REQUEST_FOR_USERS = "RequestUsers";
 	public static final String BROADCAST_USER_LIST = "BroadcastUsers";
+	public static final String NOTIFY_INCOMING_HOST = "RequestIncomingHost";
+	public static final String NOTIFY_OUTGOING_HOST = "RequestOutgoingHost";
+	public static final String BROADCAST_HOST = "BroadcastHost";
 	public static final String SEND_MESSAGE_TO_GROUP = "SendMessage";
 	public static final String SEND_INVITE_TO_GROUP = "SendInvite";
-	public static final String HOST_INCREASE_PING = "HostIncreasePing";
-	public static final String HOST_LEFT_PING = "HostLeftPing";
-	public static final String REQUEST_NUMBER_OF_HOST = "RequestNumberOfHost";
 
 	/**
 	 * Constructor for Non-Login
@@ -62,7 +59,8 @@ public class GroupController {
 		joinLobby();
 		chatApp.createGroupBtn.setVisible(false);
 		chatApp.createGroup_txt.setVisible(false);
-		requestNumberOfHost();
+		// Broadcast the incoming client
+		notifyIncomingHostData();
 	}
 
 	/* TO-DO Login function to restore state by changing Controller's attributes */
@@ -123,8 +121,6 @@ public class GroupController {
 							if (globalUserList.size() > 0) {
 								chatApp.convertUserListToListModel();
 							}
-//								System.out.println("Printing out updated user list" + globalUserList.toString());
-//								System.out.println("Printing out updated group list" + globalGroupList.toString());
 							break;
 						case REQUEST_FOR_USERS:
 							// All clients to send out their global user list
@@ -132,7 +128,32 @@ public class GroupController {
 								sendUserData(globalUserList);
 							}
 							break;
-
+						case BROADCAST_HOST:
+							// All clients to update their host count to the updated
+							hostPingCount = objectDataReceived.getNumberOfHost();
+//							System.out.println("Received new List! My List is now" + hostPingCount);
+							break;
+						case NOTIFY_INCOMING_HOST:
+							// Another client received that there is a new client
+							if (!currentUser.getUserName().equals(objectDataReceived.sender)) {
+								// Increment host count by one
+								hostPingCount++;
+								// Broadcast Host data
+								sendHostData(hostPingCount);
+//								System.out.println("Received new client! My List is now" + hostPingCount);
+							}
+							break;
+						case NOTIFY_OUTGOING_HOST:
+							// Decrement host count by one
+							hostPingCount--;
+							// Broadcast Host data
+							sendHostData(hostPingCount);
+//							if (hostPingCount > 1) {
+//								System.out.println("Oh man one client left? " + hostPingCount);
+//							} else {
+//								System.out.println("you are the last one  " + hostPingCount);
+//							}
+							break;
 						case SEND_INVITE_TO_GROUP:
 							// Target user will display pop up to accept or decline
 							if (objectDataReceived.stringData.get(0).equals(currentUser.userName)) {
@@ -149,32 +170,6 @@ public class GroupController {
 									// Do nothing / don't join
 
 								}
-							}
-							break;
-						case HOST_INCREASE_PING:
-							// All clients to send out their global user list
-							if (currentUser.getUserName().equals(objectDataReceived.sender)) {
-							hostPingCount += 1;
-							System.out.println("Number of host left " + hostPingCount);
-							}
-							break;
-
-						case REQUEST_NUMBER_OF_HOST:
-							// All clients to send out their global user list
-							if (!currentUser.getUserName().equals(objectDataReceived.sender)) {
-								hostPingCount = objectDataReceived.getNumberOfHost();
-								increaseHostPingCount();
-								System.out.println("Number of host left " + hostPingCount);
-							}
-							break;
-
-						case HOST_LEFT_PING:
-							// All clients to send out their global user list
-							hostPingCount -= 1;
-							if (hostPingCount > 1) {
-								System.out.println("you are not the last one  " + hostPingCount);
-							} else {
-								System.out.println("you are the last one  " + hostPingCount);
 							}
 							break;
 						default:
@@ -261,26 +256,6 @@ public class GroupController {
 		}
 	}
 
-	public void sendInvite(String targetUser, Group grouptojoin) {
-		try {
-			List<String> stringData = new ArrayList<>();
-			List<Group> groupData = new ArrayList<>();
-			stringData.add(targetUser);
-			groupData.add(grouptojoin);
-			DataSend sendingData = new DataSend();
-			sendingData.setCommand(SEND_INVITE_TO_GROUP);
-			sendingData.setSender(currentUser.userName);
-			sendingData.setMulticastGroupIP(multicastLobby);
-			sendingData.setStringData(stringData);
-			sendingData.setGroupData(groupData);
-			byte[] buf = toByte(sendingData);
-			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
-			multicastSocket.send(dgpSend);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
 	/**
 	 * Function to broadcast current group list to all clients
 	 * 
@@ -311,6 +286,58 @@ public class GroupController {
 		try {
 			DataSend sendingData = new DataSend();
 			sendingData.setCommand(REQUEST_FOR_GROUPS);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	/**
+	 * Function to Broadcast the Host count to all clients
+	 */
+	public void sendHostData(int hostPingCount) {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(BROADCAST_HOST);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setNumberOfHost(hostPingCount);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	/**
+	 * Function to let other clients know that a new client has joined the network
+	 */
+	public void notifyIncomingHostData() {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(NOTIFY_INCOMING_HOST);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Function to let other clients know that a client has left the network
+	 */
+	public void notifyOutgoingHostData() {
+		try {
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(NOTIFY_OUTGOING_HOST);
 			sendingData.setSender(currentUser.userName);
 			sendingData.setMulticastGroupIP(multicastLobby);
 			byte[] buf = toByte(sendingData);
@@ -495,6 +522,26 @@ public class GroupController {
 			return newIPAdd;
 		}
 	}
+	
+	public void sendInvite(String targetUser, Group grouptojoin) {
+		try {
+			List<String> stringData = new ArrayList<>();
+			List<Group> groupData = new ArrayList<>();
+			stringData.add(targetUser);
+			groupData.add(grouptojoin);
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(SEND_INVITE_TO_GROUP);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			sendingData.setStringData(stringData);
+			sendingData.setGroupData(groupData);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 
 	/**
 	 * Function to store last ten message in group chat
@@ -636,50 +683,6 @@ public class GroupController {
 			}
 		}
 		return false;
-	}
-
-	public void hostLeftPing() {
-		try {
-			DataSend sendingData = new DataSend();
-			sendingData.setCommand(HOST_LEFT_PING);
-			sendingData.setSender(currentUser.userName);
-			sendingData.setMulticastGroupIP(multicastLobby);
-			byte[] buf = toByte(sendingData);
-			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
-			multicastSocket.send(dgpSend);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	public void increaseHostPingCount() {
-		try {
-			DataSend sendingData = new DataSend();
-			sendingData.setCommand(HOST_INCREASE_PING);
-			sendingData.setSender(currentUser.userName);
-			sendingData.setMulticastGroupIP(multicastLobby);
-			byte[] buf = toByte(sendingData);
-			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
-			multicastSocket.send(dgpSend);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	public void requestNumberOfHost() {
-		try {
-			DataSend sendingData = new DataSend();
-			sendingData.setCommand(HOST_INCREASE_PING);
-			sendingData.setSender(currentUser.userName);
-			sendingData.setMulticastGroupIP(multicastLobby);
-
-			sendingData.setNumberOfHost(hostPingCount);
-			byte[] buf = toByte(sendingData);
-			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
-			multicastSocket.send(dgpSend);
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
 	}
 
 	/**

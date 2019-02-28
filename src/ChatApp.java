@@ -18,22 +18,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.lang.management.ManagementFactory;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.JScrollPane;
@@ -108,6 +94,7 @@ public class ChatApp extends JFrame {
 		/**
 		 * Instantiate logic holders
 		 */
+		// On-click listener to Group Invite by clicking user
 		mouseAdapter = new MouseAdapter() {
 			@SuppressWarnings("static-access")
 			public void mouseClicked(MouseEvent evt) {
@@ -137,7 +124,7 @@ public class ChatApp extends JFrame {
 		online = new ArrayList<String>();
 		dbCon = new DBController();
 		try {
-			dbCon.getConnection();
+			DBController.getConnection();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -177,7 +164,6 @@ public class ChatApp extends JFrame {
 		// On-click Listener for Register Button
 		registerUserBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				
 				register.setVisible(true);
 				register.setTitle("Register");
 				register.setLocationRelativeTo(null);
@@ -216,7 +202,17 @@ public class ChatApp extends JFrame {
 				login.setLocationRelativeTo(null);
 			}
 		});
-
+		
+		// Add Window Listener for window close
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent et) {
+				groupController.notifyOutgoingHostData();
+				// Insert into Database
+				System.out.println("Window closing");
+				System.out.println("Remember need to send data into db before closing");
+			}
+		});
 		/**
 		 * End of attaching logic into UI
 		 */
@@ -248,21 +244,12 @@ public class ChatApp extends JFrame {
 		 */
 	}
 
-	// Function to initiate the User interface shell
+	// Function to instantiate the User interface shell
 	public void initUI() {
 		/**
 		 * Start of user interface
 		 */
 		// Content Pane
-		addWindowListener(new WindowAdapter() {
-
-			@Override
-			public void windowClosing(WindowEvent et) {
-				groupController.hostLeftPing();
-				System.out.println("Window closing");
-				System.out.println("Remember need to send data into db before closing");
-			}
-		});
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 880, 467);
 		contentPane = new JPanel();
@@ -317,13 +304,6 @@ public class ChatApp extends JFrame {
 
 		// Button for Register
 		registerUserBtn = new JButton("Register");
-		registerUserBtn.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-				register.setVisible(true);
-				register.setTitle("Register");
-				register.setLocationRelativeTo(null);
-			}
-		});
 		registerUserBtn.setBounds(10, 10, 150, 25);
 		contentPane.add(registerUserBtn);
 
@@ -434,6 +414,10 @@ public class ChatApp extends JFrame {
 
 	public static JTextArea getMessageTextArea() {
 		return messageTextArea;
+	}
+	
+	public DBController getDbCon() {
+		return dbCon;
 	}
 	/**
 	 * END OF GETTERS AND SETTERS

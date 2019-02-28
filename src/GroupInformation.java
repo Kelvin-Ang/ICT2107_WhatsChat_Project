@@ -36,6 +36,7 @@ public class GroupInformation extends JFrame {
 	
 	// Declare value variables
 	private GroupController groupController;
+	private Group currentGroup;
 
 	/**
 	 * Create the application.
@@ -70,7 +71,8 @@ public class GroupInformation extends JFrame {
 		// On-click Listener for Leave Group Button
 		btnLeaveGroup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("Leave Group");
+				System.out.println("Leaving Group");
+				groupController.leaveGroup(currentGroup);
 			}
 		});
 	}
@@ -81,9 +83,10 @@ public class GroupInformation extends JFrame {
 	 */
 	public void setCurrentGroup(Group currentGroup) {
 		/**
-		 * Append Group Name into Change Group Name Text Field
+		 * Append Group Name into Change Group Name Text Field and store group
 		 */
 		txtGroupName.setText(currentGroup.getGroupName());
+		this.currentGroup = currentGroup;
 		
 		/**
 		 * Populate Data into JTable

@@ -12,6 +12,10 @@ public class User implements Serializable {
 	String currentIP; // Current active group
 	List<String> groupList = new ArrayList<>(); // IP Address of the groups the user is in
 	
+	public User(String userName) {
+		this.userName = userName;
+	}
+	
 	public User(String userName, String currentIP) {
 		this.userName = userName;
 		this.currentIP = currentIP;
