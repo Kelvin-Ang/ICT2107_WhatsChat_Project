@@ -159,8 +159,12 @@ public class ChatApp extends JFrame {
 		// On-click Listener for Send Message Button
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
-				sendMessage_txt.setText("");
+				if (sendMessage_txt.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Please enter something before sending message");
+				} else {
+					groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+					sendMessage_txt.setText("");
+				}
 			}
 		});
 
@@ -194,6 +198,7 @@ public class ChatApp extends JFrame {
 				
 				logoutBtn.setVisible(false);
 				loginBtn.setVisible(true);
+				loginBtn.setEnabled(true);
 				
 				createGroupBtn.setEnabled(false);
 				createGroup_txt.setEnabled(false);
@@ -226,6 +231,7 @@ public class ChatApp extends JFrame {
 							// For every group that is not Lobby, get every user
 							for (User userToSave : groupToSave.getUserList()) {
 								try {
+									System.out.println("Saving the state into database");
 									dbCon.saveStateToDatabase(userToSave.getUserName(), groupToSave.getIPAddress(), groupToSave.getGroupName());
 								} catch (Exception e) {
 									// TODO Auto-generated catch block
@@ -259,9 +265,12 @@ public class ChatApp extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					groupController.sendMessage(groupController.getCurrentUser().getUserName(),
-							sendMessage_txt.getText());
-					sendMessage_txt.setText("");
+					if (sendMessage_txt.getText().isEmpty()) {
+						JOptionPane.showMessageDialog(null, "Please enter something before sending message");
+					} else {
+						groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+						sendMessage_txt.setText("");
+					}
 				}
 			}
 		});
