@@ -108,7 +108,7 @@ public class GroupController {
 							// Update global Group list to latest
 							globalGroupList = new ArrayList<Group>(objectDataReceived.groupData);
 							if (globalGroupList.size() > 0 && currentUser.getGroupList().size() > 0 && chatApp.getGroupController() != null) {
-								chatApp.convertGroupListToListModel();
+								chatApp.getOnGoingGroups().setModel(chatApp.convertGroupListToListModel());
 							} else {
 								System.out.println("I CANNOT FIND GROUP CONTROLLER");
 								// Synchronous waiting till group controller is fetched
@@ -117,7 +117,7 @@ public class GroupController {
 									System.out.println("Group WAITING...");
 								}
 								System.out.println("I FOUND GROUP CONTROLLER");
-								chatApp.convertGroupListToListModel();
+								chatApp.getOnGoingGroups().setModel(chatApp.convertGroupListToListModel());
 							}
 							break;
 						case REQUEST_FOR_GROUPS:
@@ -255,6 +255,7 @@ public class GroupController {
 			ex.printStackTrace();
 		}
 	}
+
 
 	/**
 	 * Function to request for current group list from all clients
@@ -446,6 +447,7 @@ public class GroupController {
 					if (group.getGroupName().equals(groupToJoin.getGroupName())) {
 						globalGroupList.remove(group);
 						globalGroupList.add(groupToJoin);
+						break;
 					}
 				}
 			}
@@ -480,6 +482,7 @@ public class GroupController {
 				if (user.getUserName().equals(currentUser.getUserName())) {
 					globalUserList.remove(user);
 					globalUserList.add(currentUser);
+					break;
 				}
 			}
 			sendUserData(globalUserList);
@@ -730,6 +733,7 @@ public class GroupController {
 				if (findOldUser.getUserName().equals(currentUser.getUserName())) {
 					globalUserList.remove(findOldUser); 
 					globalUserList.add(currentUser); 
+					break;
 				}
 			}
 			sendUserData(globalUserList);
@@ -741,6 +745,10 @@ public class GroupController {
 				}
 			}
 			sendGroupData(globalGroupList);
+			// Join new active group
+			multicastGroup = InetAddress.getByName(currentUser.getCurrentIP());
+			System.out.println("Joining group " + currentUser.getCurrentIP());
+			multicastSocket.joinGroup(multicastGroup);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -765,7 +773,11 @@ public class GroupController {
 	public List<Group> getGlobalGroupList() {
 		return globalGroupList;
 	}
-	
+
+	public MulticastSocket getMulticastSocket() {
+		return multicastSocket;
+	}
+
 	public int getHostPingCount() {
 		return hostPingCount;
 	}

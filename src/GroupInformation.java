@@ -1,21 +1,17 @@
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.net.InetAddress;
 import java.awt.event.ActionEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
@@ -58,6 +54,23 @@ public class GroupInformation extends JFrame {
 		btnEditName.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println(txtGroupName.getText());
+				// Retrieve user input for New Group's name
+				String groupName = txtGroupName.getText();
+				// Find old group in globalGroupList
+				System.out.println("Before changing " + groupController.getGlobalGroupList().toString());
+				for (Group oldGroup : groupController.getGlobalGroupList()) {
+					if (oldGroup.getGroupName().equals(currentGroup.getGroupName())) {
+						oldGroup.setGroupName(groupName);
+						currentGroup.setGroupName(groupName);
+					}
+				}
+				System.out.println("After changing " + groupController.getGlobalGroupList().toString());
+				groupController.sendGroupData(groupController.getGlobalGroupList());
+				chatApp.getOnGoingGroups().setModel(chatApp.convertGroupListToListModel());
+				chatApp.getGroupInformation().setTitle(groupName + " Information");
+				// Success Message Dialog box
+				JOptionPane.showMessageDialog(null, "Group name updated successfully!");
+				
 			}
 		});
 		
@@ -65,7 +78,7 @@ public class GroupInformation extends JFrame {
 		btnActiveGroup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("Active Group");
-				// TODO Reconnect socket
+				// Update data
 				groupController.setCurrentActiveGroup(currentGroup);
 			}
 		});

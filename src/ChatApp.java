@@ -158,6 +158,7 @@ public class ChatApp extends JFrame {
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+				sendMessage_txt.setText("");
 			}
 		});
 
@@ -239,6 +240,7 @@ public class ChatApp extends JFrame {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					groupController.sendMessage(groupController.getCurrentUser().getUserName(),
 							sendMessage_txt.getText());
+					sendMessage_txt.setText("");
 				}
 			}
 		});
@@ -484,6 +486,10 @@ public class ChatApp extends JFrame {
 		return messageTextArea;
 	}
 	
+	public GroupInformation getGroupInformation() {
+		return groupInformation;
+	}
+
 	public DBController getDbCon() {
 		return dbCon;
 	}
