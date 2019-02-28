@@ -112,7 +112,18 @@ public class DBController {
 				.prepareStatement("UPDATE User SET IPAddress = '" + IPAddress + "' WHERE username = '" + username + "'");
 		updateUserIP.executeUpdate();
 	}
-	
+	public static void saveStateToDatabase(String username, String IPAddress, String groupName) throws Exception {
+		try {
+			Connection conn = getConnection();
+			PreparedStatement insertUserGroupPair = conn
+					.prepareStatement("INSERT INTO UserGroup (username, IPAddress, groupName) VALUES ('" + username + "', '"
+							+ IPAddress + "', '" + groupName + "')");
+			insertUserGroupPair.executeUpdate();
+			System.out.println("db execution of statement completed");
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+	}
 	public static UserList getOnlineUsers(ArrayList<String> user) throws Exception {
 		Connection conn = getConnection();
 		UserList userPair;
@@ -172,5 +183,42 @@ public class DBController {
 				group.add(groupIP);
 			}
 		return group;
+	}
+	public static ArrayList<String> getDistinctUser() throws Exception {
+		Connection conn = getConnection();
+		PreparedStatement checkExistingUser = conn
+				.prepareStatement("SELECT DISTINCT username from UserGroup");
+		ResultSet result = checkExistingUser.executeQuery();
+
+		ArrayList<String> usernameList = new ArrayList<String>();
+
+		while (result.next()) {
+			String username = result.getString("username");
+			usernameList.add(username);
+		}
+		return usernameList;
+	}
+	
+	/**
+	 * Get all unique groupName in UserGroup Table
+	 * @return
+	 * @throws Exception
+	 */
+	public static List<Group> getDistinctGroup() throws Exception {
+		Connection conn = getConnection();
+		PreparedStatement checkExistingUser = conn
+				.prepareStatement("SELECT DISTINCT IPAddress, groupName from UserGroup");
+		ResultSet result = checkExistingUser.executeQuery();
+
+		List<Group> globalGroupList = new ArrayList<Group>();
+		Group tempGroup = null;
+		
+		while (result.next()) {
+			String IPAddress = result.getString("IPAddress");
+			String groupName = result.getString("groupName");
+			tempGroup = new Group(IPAddress, groupName);
+			globalGroupList.add(tempGroup);
+		}
+		return globalGroupList;
 	}
 }
