@@ -183,6 +183,18 @@ public class ChatApp extends JFrame {
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent et) {
+				System.out.println("Windows closing");
+				// Going offline, remove from Global User List
+				for (User findUserToDelete : groupController.getGlobalUserList()) {
+					if (findUserToDelete.getUserName().equals(groupController.getCurrentUser().getUserName())) {
+						groupController.getGlobalUserList().remove(findUserToDelete);
+						break;
+					}
+				}
+				System.out.println("Final user list" + groupController.getGlobalUserList());
+				// Broadcast the change that user has went offline
+				groupController.sendUserData(groupController.getGlobalUserList());
+				// Broadcast the decrement in host
 				groupController.notifyOutgoingHostData();
 				// Detected that it is the last client, save state into Database
 				if (groupController.getHostPingCount() == 1) {
@@ -391,6 +403,10 @@ public class ChatApp extends JFrame {
 						});
 			}
 			System.out.println("Mouse Listeners " + mouseArray.length);
+			while (imageMap == null) {
+				// Lock
+				System.out.println("Image WAITING...");
+			}
 			nameJList.setCellRenderer(new listRenderer());
 		} catch (Exception e1) {
 			e1.printStackTrace();
