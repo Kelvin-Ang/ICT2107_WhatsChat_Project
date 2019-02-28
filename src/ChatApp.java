@@ -22,6 +22,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Random;
 
 import javax.swing.JScrollPane;
 import javax.swing.JList;
@@ -151,6 +152,7 @@ public class ChatApp extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
 				onGoingGroups.setModel(convertGroupListToListModel());
+				createGroup_txt.setText("");
 			}
 		});
 
@@ -174,9 +176,28 @@ public class ChatApp extends JFrame {
 		// On-click Listener for Logout Button
 		logoutBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				login.setVisible(true);
-				login.setTitle("Login");
-				login.setLocationRelativeTo(null);
+				// Going offline, remove from Global User List
+				for (User findUserToDelete : groupController.getGlobalUserList()) {
+					if (findUserToDelete.getUserName().equals(groupController.getCurrentUser().getUserName())) {
+						groupController.getGlobalUserList().remove(findUserToDelete);
+						break;
+					}
+				}
+				System.out.println("Final user list" + groupController.getGlobalUserList());
+				// Broadcast the change that user has went offline
+				groupController.sendUserData(groupController.getGlobalUserList());
+				// Broadcast the decrement in host
+				groupController.notifyOutgoingHostData();
+				
+				groupController.resetUser(groupController.getGlobalGroupList().get(0));
+				onGoingGroups.setModel(convertGroupListToListModel());
+				
+				logoutBtn.setVisible(false);
+				loginBtn.setVisible(true);
+				
+				createGroupBtn.setEnabled(false);
+				createGroup_txt.setEnabled(false);
+				registerUserBtn.setEnabled(true);
 			}
 		});
 		
@@ -317,13 +338,15 @@ public class ChatApp extends JFrame {
 		createGroupBtn = new JButton("Create Group");
 		createGroupBtn.setBounds(10, 50, 150, 25);
 		contentPane.add(createGroupBtn);
+		createGroupBtn.setEnabled(false);
 
 		// Text Field for Create Group
 		createGroup_txt = new JTextField();
 		createGroup_txt.setColumns(10);
 		createGroup_txt.setBounds(170, 50, 170, 25);
 		contentPane.add(createGroup_txt);
-
+		createGroup_txt.setEnabled(false);
+		
 		// Button for Send Message
 		sendMessageBtn = new JButton("Send Message");
 		sendMessageBtn.setBounds(722, 380, 128, 25);

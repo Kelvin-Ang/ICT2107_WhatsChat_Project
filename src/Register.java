@@ -167,7 +167,9 @@ public class Register extends JFrame {
 						Boolean insertSuccessful = dbCon.insertUser(username, password, image, IPAddress);
 						if (insertSuccessful) {
 							lblResult.setText("Account created.");
-
+							txtName.setText("");
+							txtPassword.setText("");
+							txtCPassword.setText("");
 							
 								User user = dbCon.getUser(username, password);
 							
