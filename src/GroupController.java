@@ -453,10 +453,10 @@ public class GroupController {
 			// Leave group by IP Address and port
 			multicastGroup = InetAddress.getByName(groupToLeave.IPAddress);
 			multicastSocket.leaveGroup(multicastGroup);
-			//Remove user from group
-			currentUser.getGroupList().remove(currentUser.getUserName());
 			// Remove group from userList
 			groupToLeave.getUserList().remove(currentUser);
+			//Remove user from group
+			currentUser.getGroupList().remove(currentUser.getUserName());
 			// Update globalUserList
 			for (User user : globalUserList) {
 				if (user.getUserName().equals(currentUser.getUserName())) {
@@ -693,6 +693,40 @@ public class GroupController {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Function to update current active group
+	 * @param currentActiveGroup
+	 */
+	public void setCurrentActiveGroup(Group currentActiveGroup) {
+		try {
+			// Remove old user from Group
+			currentActiveGroup.getUserList().remove(currentUser);
+			// Update user's Current IP to Group's IP
+			currentUser.setCurrentIP(currentActiveGroup.getIPAddress());
+			// Add new user back to Group
+			currentActiveGroup.getUserList().add(currentUser);
+			// Update globalUserList
+			for (User findOldUser : globalUserList) {
+				if (findOldUser.getUserName().equals(currentUser.getUserName())) {
+					globalUserList.remove(findOldUser); 
+					globalUserList.add(currentUser); 
+				}
+			}
+			sendUserData(globalUserList);
+
+			for (Group group : globalGroupList) {
+				if (group.getGroupName().equals(currentActiveGroup.getIPAddress())) {
+					globalGroupList.remove(group);
+					globalGroupList.add(currentActiveGroup);
+				}
+			}
+			sendGroupData(globalGroupList);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**

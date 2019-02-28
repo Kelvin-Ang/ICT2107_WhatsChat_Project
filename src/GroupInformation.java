@@ -65,6 +65,8 @@ public class GroupInformation extends JFrame {
 		btnActiveGroup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				System.out.println("Active Group");
+				// TODO Reconnect socket
+				groupController.setCurrentActiveGroup(currentGroup);
 			}
 		});
 		
