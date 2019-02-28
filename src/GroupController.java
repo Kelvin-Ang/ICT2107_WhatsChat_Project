@@ -27,7 +27,6 @@ public class GroupController {
 	private InetAddress multicastLobby = null;
 	private MulticastSocket multicastSocket = null;
 	private User currentUser;
-	private Group currentActiveGroup;
 	private List<User> globalUserList = new ArrayList<>();
 	private static List<Group> globalGroupList = new ArrayList<>();
 	Random rand = new Random();
@@ -109,7 +108,7 @@ public class GroupController {
 							// Update global Group list to latest
 							globalGroupList = new ArrayList<Group>(objectDataReceived.groupData);
 							if (globalGroupList.size() > 0 && currentUser.getGroupList().size() > 0) {
-								chatApp.groupController.convertGroupListToListModel();
+								chatApp.convertGroupListToListModel();
 							}
 							break;
 						case REQUEST_FOR_GROUPS:
@@ -166,7 +165,7 @@ public class GroupController {
 								if (option == 0) {
 									// Join
 									joinGroup(objectDataReceived.groupData.get(0));
-									chatApp.onGoingGroups.setModel(convertGroupListToListModel());
+									chatApp.onGoingGroups.setModel(chatApp.convertGroupListToListModel());
 								}
 								// if option is no
 								else {
@@ -364,8 +363,6 @@ public class GroupController {
 			multicastSocket.joinGroup(multicastLobby);
 			currentUser = new User("Anonymous" + rand.nextInt(9999999), "230.1.1.1");
 
-			// Setting the current active group to Lobby when user group
-			currentActiveGroup = convertIPAddressToGroup("230.1.1.1");
 			newThread();
 			// Request group data from other clients
 			getGroupData();
@@ -422,17 +419,21 @@ public class GroupController {
 			currentUser.setCurrentIP(groupToJoin.IPAddress);
 			// Add User into the group
 			groupToJoin.addUser(currentUser);
-			// Add group to userList in DB
-			System.out.println("calling DB");
-			dbCon.insertUserGroupPair(currentUser.userName, groupToJoin.getIPAddress());
 			// Adding the joined group into Global Group List held by all clients
 			if (!isInGroupList(globalGroupList, groupToJoin)) {
 				globalGroupList.add(groupToJoin);
+			} else {
+				// Group already exist, update it
+				for (Group group : globalGroupList) {
+					if (group.getGroupName().equals(groupToJoin.getGroupName())) {
+						globalGroupList.remove(group);
+						globalGroupList.add(groupToJoin);
+					}
+				}
 			}
 			// Store the joined group into the current user's Group List
 			currentUser.groupList.add(groupToJoin.getIPAddress());
-			// Setting the current active group the use is inside
-			currentActiveGroup = convertIPAddressToGroup(currentUser.getCurrentIP());
+
 			// Send Datagram Packet for joining
 			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
 			newThread();
@@ -493,34 +494,6 @@ public class GroupController {
 					groupName);
 			joinGroup(newGroup);
 		}
-	}
-
-	/**
-	 * Function to convert Group list into ListModel for JList
-	 * 
-	 * @return
-	 */
-	public DefaultListModel<Group> convertGroupListToListModel() {
-		// Initialize ListModel
-		DefaultListModel<Group> currentGroupList = new DefaultListModel<Group>();
-		// Populate ListModel with the current user's group list
-		for (String userGroupIPAddress : currentUser.groupList) {
-			for (Group group : globalGroupList) {
-				// If the user's group list has same IP as group
-				if (userGroupIPAddress.equals(group.getIPAddress())) {
-					// Group is user's active group
-					System.out.println("Current user group list" + globalGroupList.toString());
-					if (group.getIPAddress().equals(currentUser.getCurrentIP())) {
-						// Append a <Active> tag at the back of the active group
-						Group tempGroup = new Group(group.IPAddress, group.getGroupName() + " <Active>");
-						currentGroupList.addElement(tempGroup);
-					} else {
-						currentGroupList.addElement(group);
-					}
-				}
-			}
-		}
-		return currentGroupList;
 	}
 
 	/**
@@ -740,13 +713,9 @@ public class GroupController {
 	public List<Group> getGlobalGroupList() {
 		return globalGroupList;
 	}
-
-	public Group getCurrentActiveGroup() {
-		return currentActiveGroup;
-	}
-
-	public void setCurrentActiveGroup(String ActiveIP) {
-		this.currentActiveGroup = convertIPAddressToGroup(ActiveIP);
+	
+	public int getHostPingCount() {
+		return hostPingCount;
 	}
 	/**
 	 * END OF GETTERS AND SETTERS

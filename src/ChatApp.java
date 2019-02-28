@@ -107,9 +107,9 @@ public class ChatApp extends JFrame {
 					// if option is yes
 					if (option == 0) {
 						// Join
-						System.out.println("current active group" + groupController.getCurrentActiveGroup().toString());
+						System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
 						groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
-						groupController.getCurrentActiveGroup());
+						groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
 					}
 					// if option is no
 					else {
@@ -138,7 +138,7 @@ public class ChatApp extends JFrame {
 		 * Start of attaching logic into UI
 		 */
 		// Start of Group List
-		onGoingGroups.setModel(groupController.convertGroupListToListModel());
+		onGoingGroups.setModel(convertGroupListToListModel());
 		onGoingGroups.addMouseListener(new MouseAdapter() {
 			@SuppressWarnings("static-access")
 			public void mouseClicked(MouseEvent evt) {
@@ -174,7 +174,7 @@ public class ChatApp extends JFrame {
 		createGroupBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				groupController.createGroup(createGroup_txt.getText());
-				onGoingGroups.setModel(groupController.convertGroupListToListModel());
+				onGoingGroups.setModel(convertGroupListToListModel());
 			}
 		});
 
@@ -208,9 +208,14 @@ public class ChatApp extends JFrame {
 			@Override
 			public void windowClosing(WindowEvent et) {
 				groupController.notifyOutgoingHostData();
-				// Insert into Database
-				System.out.println("Window closing");
-				System.out.println("Remember need to send data into db before closing");
+				if (groupController.getHostPingCount() == 1) {
+					// Insert into Database
+					System.out.println("Window closing" + groupController.getHostPingCount());
+					System.out.println("Remember need to send data into db before closing");
+				} else {
+					System.out.println("Window closing" + groupController.getHostPingCount());
+					System.out.print("Still got people la");
+				}
 			}
 		});
 		/**
@@ -225,7 +230,7 @@ public class ChatApp extends JFrame {
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					groupController.createGroup(createGroup_txt.getText());
-					onGoingGroups.setModel(groupController.convertGroupListToListModel());
+					onGoingGroups.setModel(convertGroupListToListModel());
 				}
 			}
 		});
@@ -269,6 +274,7 @@ public class ChatApp extends JFrame {
 		scrollPane_1.setBounds(220, 120, 180, 250);
 		contentPane.add(scrollPane_1);
 		onGoingGroups = new JList<Group>(); // Set empty model shell
+		onGoingGroups.setFont(new Font("helvitica", Font.PLAIN, 16));
 		scrollPane_1.setViewportView(onGoingGroups);
 
 		// Scroll Pane 2 for Message Text Area
@@ -299,7 +305,7 @@ public class ChatApp extends JFrame {
 		lblUserName = new JLabel("");
 		lblUserName.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblUserName.setFont(new Font("Tahoma", Font.PLAIN, 15));
-		lblUserName.setBounds(700, 10, 150, 25);
+		lblUserName.setBounds(650, 10, 200, 25);
 		contentPane.add(lblUserName);
 
 		// Button for Register
@@ -334,7 +340,7 @@ public class ChatApp extends JFrame {
 		loginBtn.setBounds(170, 10, 150, 25);
 		contentPane.add(loginBtn);
 
-		// Button for Login
+		// Button for Logout
 		logoutBtn = new JButton("Log out");
 		logoutBtn.setBounds(170, 10, 150, 25);
 		contentPane.add(logoutBtn);
@@ -342,7 +348,7 @@ public class ChatApp extends JFrame {
 	}
 
 	public class listRenderer extends DefaultListCellRenderer {
-		Font font = new Font("helvitica", Font.BOLD, 20);
+		Font font = new Font("helvitica", Font.PLAIN, 16);
 
 		@Override
 		public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected,
@@ -387,6 +393,34 @@ public class ChatApp extends JFrame {
 		nameJList.setCellRenderer(new listRenderer());
 		nameJList.removeMouseListener(mouseAdapter);
 		nameJList.addMouseListener(mouseAdapter);
+	}
+	
+	/**
+	 * Function to convert Group list into ListModel for JList
+	 * 
+	 * @return
+	 */
+	public DefaultListModel<Group> convertGroupListToListModel() {
+		// Initialize ListModel
+		DefaultListModel<Group> currentGroupList = new DefaultListModel<Group>();
+		// Populate ListModel with the current user's group list
+		for (String userGroupIPAddress : groupController.getCurrentUser().getGroupList()) {
+			for (Group group : groupController.getGlobalGroupList()) {
+				// If the user's group list has same IP as group
+				if (userGroupIPAddress.equals(group.getIPAddress())) {
+					// Group is user's active group
+					if (group.getIPAddress().equals(groupController.getCurrentUser().getCurrentIP())) {
+						// Append a <Active> tag at the back of the active group
+						Group tempGroup = new Group(group.IPAddress, group.getGroupName() + " <Active>");
+						currentGroupList.addElement(tempGroup);
+					} else {
+						currentGroupList.addElement(group);
+					}
+				}
+			}
+		}
+		System.out.println("Current user group list" + currentGroupList);
+		return currentGroupList;
 	}
 
 	/**
