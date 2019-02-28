@@ -383,21 +383,35 @@ public class ChatApp extends JFrame {
 							public void mouseClicked(MouseEvent evt) {
 								JList list = (JList) evt.getSource();
 								if (evt.getClickCount() == 2) {
+									
+					
 									int index = list.locationToIndex(evt.getPoint());
-									int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
-											+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
-											JOptionPane.YES_NO_OPTION);
-									// if option is yes
-									if (option == 0) {
-										// Join
-										System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
-										groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
-										groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
+									if(groupController.isUserInLobby(groupController.getCurrentUser().getCurrentIP())) {
+										int option = JOptionPane.showConfirmDialog(null, " You are in the Lobby \n Join a Group first to invite!", "Group Invitation",
+												JOptionPane.DEFAULT_OPTION);
+									} else if(groupController.getCurrentUser().getUserName().equals(groupController.getGlobalUserList().get(index).getUserName())) {
+										int option = JOptionPane.showConfirmDialog(null, " You are already in the Group!", "Group Invitation",
+												JOptionPane.DEFAULT_OPTION);
+									} else if(groupController.getUserInGroup(groupController.getCurrentUser().getCurrentIP().toString(),groupController.getGlobalUserList().get(index).toString())) {
+										int option = JOptionPane.showConfirmDialog(null, groupController.getGlobalUserList().get(index) + " has been invited to the Group!", "Group Invitation",
+												JOptionPane.DEFAULT_OPTION);
 									}
-									// if option is no
 									else {
-										// Do nothing / don't join
+										int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
+												+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
+												JOptionPane.YES_NO_OPTION);
+										// if option is yes
+										if (option == 0) {
+											// Join
+											System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
+											groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
+											groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
+										}
+										// if option is no
+										else {
+											// Do nothing / don't join
 
+										}
 									}
 								}
 

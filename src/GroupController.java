@@ -44,6 +44,8 @@ public class GroupController {
 	public static final String BROADCAST_HOST = "BroadcastHost";
 	public static final String SEND_MESSAGE_TO_GROUP = "SendMessage";
 	public static final String SEND_INVITE_TO_GROUP = "SendInvite";
+	public static final String KICK_USER = "KickUser";
+	
 
 	/**
 	 * Constructor for Non-Login
@@ -190,6 +192,16 @@ public class GroupController {
 									// Do nothing / don't join
 
 								}
+							}
+							break;
+							
+						case KICK_USER:
+							// User with the username will leave the Group
+							if (currentUser.getUserName().equals(objectDataReceived.stringData.get(0))) {
+								leaveGroup(objectDataReceived.groupData.get(0));
+								int option = JOptionPane.showConfirmDialog(null, "You have been kick out of the chat by " + objectDataReceived.sender, "KICK",
+										JOptionPane.DEFAULT_OPTION);
+								joinGroup(globalGroupList.get(0));
 							}
 							break;
 						default:
@@ -650,12 +662,18 @@ public class GroupController {
 	 * 
 	 * @param currentList
 	 * @param newUser
-	 * @return
+	 * @return newUserList updated
 	 */
 	public List<User> addUser(List<User> currentList, User newUser) {
 		currentList.add(newUser);
 		return currentList;
 	}
+	
+	/**
+	 * Convert IPAddress in to Group object  
+	 * @param IPAddress
+	 * @return Group object
+	 */
 
 	public Group convertIPAddressToGroup(String IPAddress) {
 		Group convertedGroup = null;
@@ -666,6 +684,22 @@ public class GroupController {
 		}
 		return convertedGroup;
 	}
+	
+	/**
+	 * Convert Name in to User object  
+	 * @param Name
+	 * @return User Object
+	 */
+	public User convertNameToUser(String Name) {
+		User targetUser = null;
+		for (User user : globalUserList) {
+			if (user.getUserName().equals(Name)) {
+				targetUser = new User(user);
+			}
+		}
+		return targetUser;
+	}
+	
 
 	/**
 	 * Function to remove user from List of User
@@ -752,6 +786,46 @@ public class GroupController {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	public boolean getUserInGroup(String IP,String targetName){
+		Group targetGroup = convertIPAddressToGroup(IP);
+		User targetUser = convertNameToUser(targetName);
+		
+		if(isInUserList(targetGroup.getUserList(),targetUser)) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	public boolean isUserInLobby(String IP) {
+		if(multicastLobby.getHostAddress().equals(IP)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void kickUser(String Name) {
+		try {
+			List<String> stringData = new ArrayList<>();
+			List<Group> groupData = new ArrayList<>();
+			stringData.add(Name);
+			groupData.add(convertIPAddressToGroup(currentUser.getCurrentIP()));
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(KICK_USER);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			sendingData.setStringData(stringData);
+			sendingData.setGroupData(groupData);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
 	}
 

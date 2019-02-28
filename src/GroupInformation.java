@@ -33,6 +33,7 @@ public class GroupInformation extends JFrame {
 	// Declare value variables
 	private GroupController groupController;
 	private Group currentGroup;
+	private JButton KickBtn;
 
 	/**
 	 * Create the application.
@@ -71,6 +72,31 @@ public class GroupInformation extends JFrame {
 				// Success Message Dialog box
 				JOptionPane.showMessageDialog(null, "Group name updated successfully!");
 				
+			}
+		});
+		
+		// On-click Listener for Kick Button
+		KickBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String Name = groupTable.getModel().getValueAt(groupTable.getSelectedRow(), 2).toString();
+				if(Name.equals(groupController.getCurrentUser().userName)) {
+					int option = JOptionPane.showConfirmDialog(null, "You cannot kick yourself \n Do you want to Leave the Group", "Kick",
+							JOptionPane.YES_NO_OPTION);
+					if (option == 0) {
+						// Leave
+						groupController.leaveGroup(groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
+						System.out.println("you have leave the group");
+					}
+					// if option is no
+					else {
+						// Do nothing / don't Leave
+
+					}
+					
+				} else {
+					
+					groupController.kickUser(Name);
+				}
 			}
 		});
 		
@@ -169,7 +195,7 @@ public class GroupInformation extends JFrame {
 		
 		// Label for Group Participants
 		lblGroupParticipants = new JLabel("Group Participants");
-		lblGroupParticipants.setBounds(10, 40, 380, 25);
+		lblGroupParticipants.setBounds(10, 40, 269, 25);
 		contentPane.add(lblGroupParticipants);
 		
 		// Scroll Pane for Group Table
@@ -196,6 +222,10 @@ public class GroupInformation extends JFrame {
 		btnLeaveGroup = new JButton("Leave Group");
 		btnLeaveGroup.setBounds(200, 335, 150, 25);
 		contentPane.add(btnLeaveGroup);
+		
+		KickBtn = new JButton("Kick");
+		KickBtn.setBounds(290, 41, 99, 23);
+		contentPane.add(KickBtn);
 	}
 
 	/**

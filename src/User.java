@@ -21,6 +21,14 @@ public class User implements Serializable {
 		this.currentIP = currentIP;
 	}
 	
+	public User(User user) {
+		// TODO Auto-generated constructor stub
+		this.currentIP = user.getCurrentIP();
+		this.groupList = user.getGroupList();
+		this.password = user.getPassword();
+		this.userName = user.getUserName();
+	}
+
 	public String getUserName() {
 		return userName;
 	}
