@@ -109,6 +109,15 @@ public class GroupController {
 							globalGroupList = new ArrayList<Group>(objectDataReceived.groupData);
 							if (globalGroupList.size() > 0 && currentUser.getGroupList().size() > 0 && chatApp.getGroupController() != null) {
 								chatApp.convertGroupListToListModel();
+							} else {
+								System.out.println("I CANNOT FIND GROUP CONTROLLER");
+								// Synchronous waiting till group controller is fetched
+								while (chatApp.getGroupController() == null) {
+									// Lock
+									System.out.println("Group WAITING...");
+								}
+								System.out.println("I FOUND GROUP CONTROLLER");
+								chatApp.convertGroupListToListModel();
 							}
 							break;
 						case REQUEST_FOR_GROUPS:
@@ -121,6 +130,15 @@ public class GroupController {
 							// Update global User list to latest
 							globalUserList = new ArrayList<User>(objectDataReceived.userData);
 							if (globalUserList.size() > 0 && chatApp.getGroupController() != null) {
+								chatApp.convertUserListToListModel();
+							} else {
+								System.out.println("I CANNOT FIND GROUP CONTROLLER");
+								// Synchronous waiting till group controller is fetched
+								while (chatApp.getGroupController() == null) {
+									// Lock
+									System.out.println("User WAITING...");
+								}
+								System.out.println("I FOUND GROUP CONTROLLER");
 								chatApp.convertUserListToListModel();
 							}
 							break;
