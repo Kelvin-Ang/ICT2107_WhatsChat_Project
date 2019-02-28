@@ -91,11 +91,9 @@ public class GroupInformation extends JFrame {
 					else {
 						// Do nothing / don't Leave
 
-					}
-					
+					}			
 				} else {
-					
-					groupController.kickUser(Name);
+					groupController.kickUser(Name, groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
 				}
 			}
 		});

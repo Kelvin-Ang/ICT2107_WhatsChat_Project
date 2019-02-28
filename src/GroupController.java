@@ -201,7 +201,6 @@ public class GroupController {
 								leaveGroup(objectDataReceived.groupData.get(0));
 								int option = JOptionPane.showConfirmDialog(null, "You have been kick out of the chat by " + objectDataReceived.sender, "KICK",
 										JOptionPane.DEFAULT_OPTION);
-								joinGroup(globalGroupList.get(0));
 							}
 							break;
 						default:
@@ -468,6 +467,16 @@ public class GroupController {
 
 			// Send Datagram Packet for joining
 			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
+			new java.util.Timer().schedule(new java.util.TimerTask() {
+				@Override
+				public void run() {
+					for (Group group : globalGroupList) {
+						if (group.IPAddress.equals(groupToJoin.IPAddress)) {
+							displayGroupMessages(group);
+						}
+					}
+				}
+			}, 1000);
 			newThread();
 			// Broadcast updates of groupList to all clients
 			sendGroupData(globalGroupList);
@@ -481,34 +490,54 @@ public class GroupController {
 	 * @param groupToLeave
 	 */
 	public void leaveGroup(Group groupToLeave) {
-		try {
-			// Leave group by IP Address and port
-			multicastGroup = InetAddress.getByName(groupToLeave.IPAddress);
-			multicastSocket.leaveGroup(multicastGroup);
-			// Remove group from userList
-			groupToLeave.getUserList().remove(currentUser);
-			//Remove user from group
-			currentUser.getGroupList().remove(currentUser.getUserName());
-			// Update globalUserList
-			for (User user : globalUserList) {
-				if (user.getUserName().equals(currentUser.getUserName())) {
-					globalUserList.remove(user);
-					globalUserList.add(currentUser);
-					break;
+		// Cannot leave Lobby
+		if (!groupToLeave.getIPAddress().equals("230.1.1.1")) {
+			try {
+				// Leave group by IP Address and port
+				multicastGroup = InetAddress.getByName(groupToLeave.IPAddress);
+				multicastSocket.leaveGroup(multicastGroup);
+				System.out.println("Before removing grouplist" + currentUser.getGroupList());
+				// Remove group from user
+				for (int i = 0; i < currentUser.getGroupList().size(); i++) {
+					if (groupToLeave.getIPAddress().equals(currentUser.getGroupList().get(i))) {
+						currentUser.getGroupList().remove(i);
+						break;
+					}
 				}
-			}
-			sendUserData(globalUserList);
+				System.out.println("After removing grouplist" + currentUser.getGroupList());
+				// Update user's active group to Lobby
+				currentUser.setCurrentIP("230.1.1.1");
+				// Remove user from group
+				for (User tempUser : groupToLeave.getUserList()) {
+					if (tempUser.getUserName().equals(currentUser.getUserName())) {
+						groupToLeave.getUserList().remove(tempUser);
+						break;
+					}
+				}
+				// Update globalUserList
+				for (User user : globalUserList) {
+					if (user.getUserName().equals(currentUser.getUserName())) {
+						globalUserList.remove(user);
+						globalUserList.add(currentUser);
+						break;
+					}
+				}
+				System.out.println("Current globalUserList " + globalUserList.toString());
+				sendUserData(globalUserList);
 
-			for (Group group : globalGroupList) {
-				if (group.getGroupName().equals(groupToLeave.getGroupName())) {
-					globalGroupList.remove(group);
-					globalGroupList.add(groupToLeave);
+				for (Group group : globalGroupList) {
+					if (group.getIPAddress().equals(groupToLeave.getIPAddress())) {
+						globalGroupList.remove(group);
+						globalGroupList.add(groupToLeave);
+						break;
+					}
 				}
+				System.out.println("Current globalGroupList " + globalGroupList.toString());
+				sendGroupData(globalGroupList);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			sendGroupData(globalGroupList);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -518,15 +547,20 @@ public class GroupController {
 	 * @param groupName
 	 */
 	public void createGroup(String groupName) {
-		// Room already exist return user's current list without room creation
-		if (!(getRoomCreated(globalGroupList, groupName) == -1)) {
-			sendMessage("System Error", "Group name \"" + groupName + "\" is already taken");
+		if (chatApp.getCreateGroup_txt().getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Cannot create group with an empty text field!");
 		} else {
-			// Room does not exist, return user's list with room created
-			Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),
-					groupName);
-			joinGroup(newGroup);
+			// Room already exist return user's current list without room creation
+			if (!(getRoomCreated(globalGroupList, groupName) == -1)) {
+				sendMessage("System Error", "Group name \"" + groupName + "\" is already taken");
+			} else {
+				// Room does not exist, return user's list with room created
+				Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),
+						groupName);
+				joinGroup(newGroup);
+			}
 		}
+		
 	}
 
 	/**
@@ -809,12 +843,12 @@ public class GroupController {
 		}
 	}
 	
-	public void kickUser(String Name) {
+	public void kickUser(String Name, Group kickOutOfGroup) {
 		try {
 			List<String> stringData = new ArrayList<>();
 			List<Group> groupData = new ArrayList<>();
 			stringData.add(Name);
-			groupData.add(convertIPAddressToGroup(currentUser.getCurrentIP()));
+			groupData.add(kickOutOfGroup);
 			DataSend sendingData = new DataSend();
 			sendingData.setCommand(KICK_USER);
 			sendingData.setSender(currentUser.userName);

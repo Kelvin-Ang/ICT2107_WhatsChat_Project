@@ -504,6 +504,10 @@ public class ChatApp extends JFrame {
 		return groupInformation;
 	}
 
+	public JTextField getCreateGroup_txt() {
+		return createGroup_txt;
+	}
+
 	public DBController getDbCon() {
 		return dbCon;
 	}

@@ -124,7 +124,8 @@ public class DBController {
 			user = new User(username, password);
 		}
 		if (user != null) {
-			user.setGroupList(retrieveUserGroup(username));
+			List<String> groupList = new ArrayList<String>();
+			user.setGroupList(groupList);
 			user.setCurrentIP(result.getString("IPAddress"));
 			return user;
 		}
