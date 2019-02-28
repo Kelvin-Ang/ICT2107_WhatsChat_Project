@@ -225,6 +225,15 @@ public class ChatApp extends JFrame {
 				groupController.notifyOutgoingHostData();
 				// Detected that it is the last client, save state into Database
 				if (groupController.getHostPingCount() == 1) {
+					// Check if database has data, clear if there is
+					try {
+						if (!dbCon.isUserGroupEmpty()) {
+							dbCon.clearUserGroup();
+						}
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 					// Insert every group from Global Group List into Database
 					for (Group groupToSave : groupController.getGlobalGroupList()) {
 						if (!groupToSave.getIPAddress().equals("230.1.1.1")) {
@@ -257,6 +266,7 @@ public class ChatApp extends JFrame {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					groupController.createGroup(createGroup_txt.getText());
 					onGoingGroups.setModel(convertGroupListToListModel());
+					createGroup_txt.setText("");
 				}
 			}
 		});
