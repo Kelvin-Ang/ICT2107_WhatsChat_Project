@@ -108,6 +108,9 @@ public class GroupController {
 						case BROADCAST_GROUP_LIST:
 							// Update global Group list to latest
 							globalGroupList = new ArrayList<Group>(objectDataReceived.groupData);
+							if (globalGroupList.size() > 0 && currentUser.getGroupList().size() > 0) {
+								chatApp.groupController.convertGroupListToListModel();
+							}
 							break;
 						case REQUEST_FOR_GROUPS:
 							// All clients to send out their global group list
@@ -434,6 +437,40 @@ public class GroupController {
 			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
 			newThread();
 			// Broadcast updates of groupList to all clients
+			sendGroupData(globalGroupList);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	/**
+	 * Function to leave group
+	 * @param groupToLeave
+	 */
+	public void leaveGroup(Group groupToLeave) {
+		try {
+			// Leave group by IP Address and port
+			multicastGroup = InetAddress.getByName(groupToLeave.IPAddress);
+			multicastSocket.leaveGroup(multicastGroup);
+			//Remove user from group
+			currentUser.getGroupList().remove(currentUser.getUserName());
+			// Remove group from userList
+			groupToLeave.getUserList().remove(currentUser);
+			// Update globalUserList
+			for (User user : globalUserList) {
+				if (user.getUserName().equals(currentUser.getUserName())) {
+					globalUserList.remove(user);
+					globalUserList.add(currentUser);
+				}
+			}
+			sendUserData(globalUserList);
+
+			for (Group group : globalGroupList) {
+				if (group.getGroupName().equals(groupToLeave.getGroupName())) {
+					globalGroupList.remove(group);
+					globalGroupList.add(groupToLeave);
+				}
+			}
 			sendGroupData(globalGroupList);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
