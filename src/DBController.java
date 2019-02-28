@@ -163,13 +163,12 @@ public class DBController {
 		return userPair;
 	}
 	
-	public static void insertUserGroupPair(String username, String IPAddress) throws Exception {
+	public static void saveStateToDatabase(String username, String IPAddress, String groupName) throws Exception {
 		try {
 			Connection conn = getConnection();
-			System.out.println("db conneted execution of statement");
 			PreparedStatement insertUserGroupPair = conn
-					.prepareStatement("INSERT INTO UserGroup (username, IPAddress) VALUES ('" + username + "', '"
-							+ IPAddress + "')");
+					.prepareStatement("INSERT INTO UserGroup (username, IPAddress, groupName) VALUES ('" + username + "', '"
+							+ IPAddress + "', '" + groupName + "')");
 			insertUserGroupPair.executeUpdate();
 			System.out.println("db execution of statement completed");
 		} catch (Exception e) {

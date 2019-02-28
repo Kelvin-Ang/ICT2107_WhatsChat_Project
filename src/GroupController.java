@@ -104,10 +104,10 @@ public class GroupController {
 								}
 							}
 							break;
-						case BROADCAST_GROUP_LIST:
+						case BROADCAST_GROUP_LIST:	
 							// Update global Group list to latest
 							globalGroupList = new ArrayList<Group>(objectDataReceived.groupData);
-							if (globalGroupList.size() > 0 && currentUser.getGroupList().size() > 0) {
+							if (globalGroupList.size() > 0 && currentUser.getGroupList().size() > 0 && chatApp.getGroupController() != null) {
 								chatApp.convertGroupListToListModel();
 							}
 							break;
@@ -120,7 +120,7 @@ public class GroupController {
 						case BROADCAST_USER_LIST:
 							// Update global User list to latest
 							globalUserList = new ArrayList<User>(objectDataReceived.userData);
-							if (globalUserList.size() > 0) {
+							if (globalUserList.size() > 0 && chatApp.getGroupController() != null) {
 								chatApp.convertUserListToListModel();
 							}
 							break;
