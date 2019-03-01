@@ -790,9 +790,29 @@ public class GroupController {
 	public void setCurrentActiveGroup(Group currentActiveGroup) {
 		try {
 			// Remove old user from Group
-			currentActiveGroup.getUserList().remove(currentUser);
-			// Update user's Current IP to Group's IP
-			currentUser.setCurrentIP(currentActiveGroup.getIPAddress());
+			for (int i = 0; currentActiveGroup.getUserList().size() > i; i++) {
+				if (currentActiveGroup.getUserList().get(i).getCurrentIP().equals(currentUser.getCurrentIP())) {
+					currentActiveGroup.getUserList().remove(i);
+					break;
+				}
+			}
+			// Loop through group list
+			for (Group tempGroup : globalGroupList) {
+				// Get user's old current group
+				if (tempGroup.getIPAddress().equals(currentUser.getCurrentIP())) {
+					// Loop through old current group to find user and remove
+					for (int i = 0; tempGroup.getUserList().size() > i; i++) {
+						if (tempGroup.getUserList().get(i).getUserName().equals(currentUser.getUserName())) {
+							tempGroup.getUserList().remove(i);
+							// Update user's Current IP to Group's IP
+							currentUser.setCurrentIP(currentActiveGroup.getIPAddress());
+							tempGroup.getUserList().add(currentUser);
+							break;
+						}
+					}
+				}
+			}
+			
 			// Add new user back to Group
 			currentActiveGroup.getUserList().add(currentUser);
 			// Update globalUserList
@@ -809,6 +829,7 @@ public class GroupController {
 				if (group.getGroupName().equals(currentActiveGroup.getIPAddress())) {
 					globalGroupList.remove(group);
 					globalGroupList.add(currentActiveGroup);
+					break;
 				}
 			}
 			sendGroupData(globalGroupList);
@@ -816,6 +837,7 @@ public class GroupController {
 			multicastGroup = InetAddress.getByName(currentUser.getCurrentIP());
 			System.out.println("Joining group " + currentUser.getCurrentIP());
 			multicastSocket.joinGroup(multicastGroup);
+			chatApp.getGroupInformation().setCurrentGroup(currentActiveGroup);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
