@@ -44,6 +44,8 @@ public class GroupController {
 	public static final String BROADCAST_HOST = "BroadcastHost";
 	public static final String SEND_MESSAGE_TO_GROUP = "SendMessage";
 	public static final String SEND_INVITE_TO_GROUP = "SendInvite";
+	public static final String KICK_USER = "KickUser";
+	
 
 	/**
 	 * Constructor for Non-Login
@@ -189,6 +191,15 @@ public class GroupController {
 									// Do nothing / don't join
 
 								}
+							}
+							break;
+							
+						case KICK_USER:
+							// User with the username will leave the Group
+							if (currentUser.getUserName().equals(objectDataReceived.stringData.get(0))) {
+								leaveGroup(objectDataReceived.groupData.get(0));
+								int option = JOptionPane.showConfirmDialog(null, "You have been kick out of the chat by " + objectDataReceived.sender, "KICK",
+										JOptionPane.DEFAULT_OPTION);
 							}
 							break;
 						default:
@@ -455,6 +466,16 @@ public class GroupController {
 
 			// Send Datagram Packet for joining
 			sendMessage(currentUser.getUserName(), "has joined " + groupToJoin.getGroupName());
+			new java.util.Timer().schedule(new java.util.TimerTask() {
+				@Override
+				public void run() {
+					for (Group group : globalGroupList) {
+						if (group.IPAddress.equals(groupToJoin.IPAddress)) {
+							displayGroupMessages(group);
+						}
+					}
+				}
+			}, 1000);
 			newThread();
 			// Broadcast updates of groupList to all clients
 			sendGroupData(globalGroupList);
@@ -468,34 +489,54 @@ public class GroupController {
 	 * @param groupToLeave
 	 */
 	public void leaveGroup(Group groupToLeave) {
-		try {
-			// Leave group by IP Address and port
-			multicastGroup = InetAddress.getByName(groupToLeave.IPAddress);
-			multicastSocket.leaveGroup(multicastGroup);
-			// Remove group from userList
-			groupToLeave.getUserList().remove(currentUser);
-			//Remove user from group
-			currentUser.getGroupList().remove(currentUser.getUserName());
-			// Update globalUserList
-			for (User user : globalUserList) {
-				if (user.getUserName().equals(currentUser.getUserName())) {
-					globalUserList.remove(user);
-					globalUserList.add(currentUser);
-					break;
+		// Cannot leave Lobby
+		if (!groupToLeave.getIPAddress().equals("230.1.1.1")) {
+			try {
+				// Leave group by IP Address and port
+				multicastGroup = InetAddress.getByName(groupToLeave.IPAddress);
+				multicastSocket.leaveGroup(multicastGroup);
+				System.out.println("Before removing grouplist" + currentUser.getGroupList());
+				// Remove group from user
+				for (int i = 0; i < currentUser.getGroupList().size(); i++) {
+					if (groupToLeave.getIPAddress().equals(currentUser.getGroupList().get(i))) {
+						currentUser.getGroupList().remove(i);
+						break;
+					}
 				}
-			}
-			sendUserData(globalUserList);
+				System.out.println("After removing grouplist" + currentUser.getGroupList());
+				// Update user's active group to Lobby
+				currentUser.setCurrentIP("230.1.1.1");
+				// Remove user from group
+				for (User tempUser : groupToLeave.getUserList()) {
+					if (tempUser.getUserName().equals(currentUser.getUserName())) {
+						groupToLeave.getUserList().remove(tempUser);
+						break;
+					}
+				}
+				// Update globalUserList
+				for (User user : globalUserList) {
+					if (user.getUserName().equals(currentUser.getUserName())) {
+						globalUserList.remove(user);
+						globalUserList.add(currentUser);
+						break;
+					}
+				}
+				System.out.println("Current globalUserList " + globalUserList.toString());
+				sendUserData(globalUserList);
 
-			for (Group group : globalGroupList) {
-				if (group.getGroupName().equals(groupToLeave.getGroupName())) {
-					globalGroupList.remove(group);
-					globalGroupList.add(groupToLeave);
+				for (Group group : globalGroupList) {
+					if (group.getIPAddress().equals(groupToLeave.getIPAddress())) {
+						globalGroupList.remove(group);
+						globalGroupList.add(groupToLeave);
+						break;
+					}
 				}
+				System.out.println("Current globalGroupList " + globalGroupList.toString());
+				sendGroupData(globalGroupList);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			sendGroupData(globalGroupList);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -505,15 +546,20 @@ public class GroupController {
 	 * @param groupName
 	 */
 	public void createGroup(String groupName) {
-		// Room already exist return user's current list without room creation
-		if (!(getRoomCreated(globalGroupList, groupName) == -1)) {
-			sendMessage("System Error", "Group name \"" + groupName + "\" is already taken");
+		if (chatApp.getCreateGroup_txt().getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Cannot create group with an empty text field!");
 		} else {
-			// Room does not exist, return user's list with room created
-			Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),
-					groupName);
-			joinGroup(newGroup);
+			// Room already exist return user's current list without room creation
+			if (!(getRoomCreated(globalGroupList, groupName) == -1)) {
+				sendMessage("System Error", "Group name \"" + groupName + "\" is already taken");
+			} else {
+				// Room does not exist, return user's list with room created
+				Group newGroup = new Group(IPincrease(globalGroupList.get(globalGroupList.size() - 1).IPAddress),
+						groupName);
+				joinGroup(newGroup);
+			}
 		}
+		
 	}
 
 	/**
@@ -649,12 +695,18 @@ public class GroupController {
 	 * 
 	 * @param currentList
 	 * @param newUser
-	 * @return
+	 * @return newUserList updated
 	 */
 	public List<User> addUser(List<User> currentList, User newUser) {
 		currentList.add(newUser);
 		return currentList;
 	}
+	
+	/**
+	 * Convert IPAddress in to Group object  
+	 * @param IPAddress
+	 * @return Group object
+	 */
 
 	public Group convertIPAddressToGroup(String IPAddress) {
 		Group convertedGroup = null;
@@ -665,6 +717,22 @@ public class GroupController {
 		}
 		return convertedGroup;
 	}
+	
+	/**
+	 * Convert Name in to User object  
+	 * @param Name
+	 * @return User Object
+	 */
+	public User convertNameToUser(String Name) {
+		User targetUser = null;
+		for (User user : globalUserList) {
+			if (user.getUserName().equals(Name)) {
+				targetUser = new User(user);
+			}
+		}
+		return targetUser;
+	}
+	
 
 	/**
 	 * Function to remove user from List of User
@@ -722,9 +790,29 @@ public class GroupController {
 	public void setCurrentActiveGroup(Group currentActiveGroup) {
 		try {
 			// Remove old user from Group
-			currentActiveGroup.getUserList().remove(currentUser);
-			// Update user's Current IP to Group's IP
-			currentUser.setCurrentIP(currentActiveGroup.getIPAddress());
+			for (int i = 0; currentActiveGroup.getUserList().size() > i; i++) {
+				if (currentActiveGroup.getUserList().get(i).getCurrentIP().equals(currentUser.getCurrentIP())) {
+					currentActiveGroup.getUserList().remove(i);
+					break;
+				}
+			}
+			// Loop through group list
+			for (Group tempGroup : globalGroupList) {
+				// Get user's old current group
+				if (tempGroup.getIPAddress().equals(currentUser.getCurrentIP())) {
+					// Loop through old current group to find user and remove
+					for (int i = 0; tempGroup.getUserList().size() > i; i++) {
+						if (tempGroup.getUserList().get(i).getUserName().equals(currentUser.getUserName())) {
+							tempGroup.getUserList().remove(i);
+							// Update user's Current IP to Group's IP
+							currentUser.setCurrentIP(currentActiveGroup.getIPAddress());
+							tempGroup.getUserList().add(currentUser);
+							break;
+						}
+					}
+				}
+			}
+			
 			// Add new user back to Group
 			currentActiveGroup.getUserList().add(currentUser);
 			// Update globalUserList
@@ -741,6 +829,7 @@ public class GroupController {
 				if (group.getGroupName().equals(currentActiveGroup.getIPAddress())) {
 					globalGroupList.remove(group);
 					globalGroupList.add(currentActiveGroup);
+					break;
 				}
 			}
 			sendGroupData(globalGroupList);
@@ -748,11 +837,53 @@ public class GroupController {
 			multicastGroup = InetAddress.getByName(currentUser.getCurrentIP());
 			System.out.println("Joining group " + currentUser.getCurrentIP());
 			multicastSocket.joinGroup(multicastGroup);
+			chatApp.getGroupInformation().setCurrentGroup(currentActiveGroup);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+	
+	public boolean getUserInGroup(String IP,String targetName){
+		Group targetGroup = convertIPAddressToGroup(IP);
+		User targetUser = convertNameToUser(targetName);
+		
+		if(isInUserList(targetGroup.getUserList(),targetUser)) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	public boolean isUserInLobby(String IP) {
+		if(multicastLobby.getHostAddress().equals(IP)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void kickUser(String Name, Group kickOutOfGroup) {
+		try {
+			List<String> stringData = new ArrayList<>();
+			List<Group> groupData = new ArrayList<>();
+			stringData.add(Name);
+			groupData.add(kickOutOfGroup);
+			DataSend sendingData = new DataSend();
+			sendingData.setCommand(KICK_USER);
+			sendingData.setSender(currentUser.userName);
+			sendingData.setMulticastGroupIP(multicastLobby);
+			sendingData.setStringData(stringData);
+			sendingData.setGroupData(groupData);
+			byte[] buf = toByte(sendingData);
+			DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastLobby, 6789);
+			multicastSocket.send(dgpSend);
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
 	public void resetUser(Group group) {
 		Random rand = new Random();
 		User user = new User("Anonymous" + rand.nextInt(9999999), "230.1.1.1" );

@@ -159,8 +159,12 @@ public class ChatApp extends JFrame {
 		// On-click Listener for Send Message Button
 		sendMessageBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
-				sendMessage_txt.setText("");
+				if (sendMessage_txt.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Please enter something before sending message");
+				} else {
+					groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+					sendMessage_txt.setText("");
+				}
 			}
 		});
 
@@ -194,6 +198,7 @@ public class ChatApp extends JFrame {
 				
 				logoutBtn.setVisible(false);
 				loginBtn.setVisible(true);
+				loginBtn.setEnabled(true);
 				
 				createGroupBtn.setEnabled(false);
 				createGroup_txt.setEnabled(false);
@@ -220,12 +225,22 @@ public class ChatApp extends JFrame {
 				groupController.notifyOutgoingHostData();
 				// Detected that it is the last client, save state into Database
 				if (groupController.getHostPingCount() == 1) {
+					// Check if database has data, clear if there is
+					try {
+						if (!dbCon.isUserGroupEmpty()) {
+							dbCon.clearUserGroup();
+						}
+					} catch (Exception e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 					// Insert every group from Global Group List into Database
 					for (Group groupToSave : groupController.getGlobalGroupList()) {
 						if (!groupToSave.getIPAddress().equals("230.1.1.1")) {
 							// For every group that is not Lobby, get every user
 							for (User userToSave : groupToSave.getUserList()) {
 								try {
+									System.out.println("Saving the state into database");
 									dbCon.saveStateToDatabase(userToSave.getUserName(), groupToSave.getIPAddress(), groupToSave.getGroupName());
 								} catch (Exception e) {
 									// TODO Auto-generated catch block
@@ -251,6 +266,7 @@ public class ChatApp extends JFrame {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
 					groupController.createGroup(createGroup_txt.getText());
 					onGoingGroups.setModel(convertGroupListToListModel());
+					createGroup_txt.setText("");
 				}
 			}
 		});
@@ -259,9 +275,12 @@ public class ChatApp extends JFrame {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					groupController.sendMessage(groupController.getCurrentUser().getUserName(),
-							sendMessage_txt.getText());
-					sendMessage_txt.setText("");
+					if (sendMessage_txt.getText().isEmpty()) {
+						JOptionPane.showMessageDialog(null, "Please enter something before sending message");
+					} else {
+						groupController.sendMessage(groupController.getCurrentUser().getUserName(), sendMessage_txt.getText());
+						sendMessage_txt.setText("");
+					}
 				}
 			}
 		});
@@ -406,21 +425,35 @@ public class ChatApp extends JFrame {
 							public void mouseClicked(MouseEvent evt) {
 								JList list = (JList) evt.getSource();
 								if (evt.getClickCount() == 2) {
+									
+					
 									int index = list.locationToIndex(evt.getPoint());
-									int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
-											+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
-											JOptionPane.YES_NO_OPTION);
-									// if option is yes
-									if (option == 0) {
-										// Join
-										System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
-										groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
-										groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
+									if(groupController.isUserInLobby(groupController.getCurrentUser().getCurrentIP())) {
+										int option = JOptionPane.showConfirmDialog(null, " You are in the Lobby \n Join a Group first to invite!", "Group Invitation",
+												JOptionPane.DEFAULT_OPTION);
+									} else if(groupController.getCurrentUser().getUserName().equals(groupController.getGlobalUserList().get(index).getUserName())) {
+										int option = JOptionPane.showConfirmDialog(null, " You are already in the Group!", "Group Invitation",
+												JOptionPane.DEFAULT_OPTION);
+									} else if(groupController.getUserInGroup(groupController.getCurrentUser().getCurrentIP().toString(),groupController.getGlobalUserList().get(index).toString())) {
+										int option = JOptionPane.showConfirmDialog(null, groupController.getGlobalUserList().get(index) + " has been invited to the Group!", "Group Invitation",
+												JOptionPane.DEFAULT_OPTION);
 									}
-									// if option is no
 									else {
-										// Do nothing / don't join
+										int option = JOptionPane.showConfirmDialog(null, "Do you want to invite "
+												+ groupController.getGlobalUserList().get(index) + " to the group?", "Group Invitation",
+												JOptionPane.YES_NO_OPTION);
+										// if option is yes
+										if (option == 0) {
+											// Join
+											System.out.println("current active group" + groupController.getCurrentUser().getCurrentIP().toString());
+											groupController.sendInvite(groupController.getGlobalUserList().get(index).toString(),
+											groupController.convertIPAddressToGroup(groupController.getCurrentUser().getCurrentIP()));
+										}
+										// if option is no
+										else {
+											// Do nothing / don't join
 
+										}
 									}
 								}
 
@@ -511,6 +544,10 @@ public class ChatApp extends JFrame {
 	
 	public GroupInformation getGroupInformation() {
 		return groupInformation;
+	}
+
+	public JTextField getCreateGroup_txt() {
+		return createGroup_txt;
 	}
 
 	public DBController getDbCon() {
